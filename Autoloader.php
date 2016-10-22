@@ -22,8 +22,7 @@ class Autoloader
             {
                 if ($this->startsWith($className, $namespace) && strlen($namespace) > strlen($lastNamespace))
                 {
-                    $classFile = $baseFolder. DIRECTORY_SEPARATOR . $namespaceFolder
-                        . DIRECTORY_SEPARATOR . substr($className, strlen($namespace)+1) . '.php';
+                    $classFile = $namespaceFolder . DIRECTORY_SEPARATOR . substr($className, strlen($namespace)+1) . '.php';
                     $lastNamespace = $namespace;
                 }
             }
