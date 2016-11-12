@@ -14,7 +14,7 @@ class Router
 
     public function route()
     {
-        $uri = $_SERVER['REQUEST_URI'];
+        $uri = strtok($_SERVER["REQUEST_URI"],'?');;
 
         $explodedUri = explode('/', substr($uri, 1));
 
