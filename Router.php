@@ -9,11 +9,15 @@ class Router
     protected $routes = array();
     protected $regexRoutes = array();
 
-    protected $controllerName = null;
-    protected $actionName = null;
+    protected $request = null;
 
     public function route()
     {
+        $this->request = new Request();
+
+        $controllerName = null;
+        $actionName = null;
+
         $uri = strtok($_SERVER["REQUEST_URI"],'?');
 
         $explodedUri = explode('/', substr($uri, 1));
@@ -56,11 +60,11 @@ class Router
 
         $action = strtolower($action);
 
-        // Before dispatch, call plugin's function
-        Project::callPluginAction('beforeDispatch', array(&$controllerName, &$action));
+        $this->request->setControllerName($controllerName);
+        $this->request->setActionName($action);
 
-        $this->controllerName = $controllerName;
-        $this->actionName = $action;
+        // Before dispatch, call plugin's function
+        Project::callPluginAction('beforeDispatch', array(&$this->request));
 
         $this->dispatch();
     }
@@ -70,15 +74,16 @@ class Router
        $controllerSuffix = self::$controllerSuffix;
        $actionSuffix = self::$actionSuffix;
 
-       $controllerName = $this->controllerName;
-       $action = $this->actionName;
+       $controllerName = $this->request->getControllerName();
+       $action = $this->request->getActionName();
 
         // Make the dispatch
         if (!empty($controllerName) && class_exists($controllerName.$controllerSuffix) && is_subclass_of($controllerName.$controllerSuffix, 'Controller'))
         {
             $controllerClassName = $controllerName.$controllerSuffix;
-            $controller = new $controllerClassName();
+            $controller = new $controllerClassName(); // Todo : put request & view inconstructor
 
+            $controller->request = $this->request;
             $controller->view = new View(strtolower($controllerName).DIRECTORY_SEPARATOR.strtolower($action));
 
             $controller->init();

@@ -1,7 +1,7 @@
 <?php
 Class Plugins
 {
-    function beforeDispatch(string &$controllerName, string &$action) {}
+    function beforeDispatch(Request &$request) {}
     function beforeAddingLayout(View &$view) {}
     function beforeRender(View &$view) {}
 }

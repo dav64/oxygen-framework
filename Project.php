@@ -5,6 +5,7 @@ require __DIR__ . '/View.php';
 require __DIR__ . '/Controller.php';
 require __DIR__ . '/Helper.php';
 require __DIR__ . '/Plugins.php';
+require __DIR__ . '/Request.php';
 
 class MVC_Exception extends Exception { }
 

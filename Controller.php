@@ -2,6 +2,7 @@
 class Controller
 {
     public $view = null;
+    public $request = null;
 
     protected $params = array();
 
