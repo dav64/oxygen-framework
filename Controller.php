@@ -20,4 +20,9 @@ class Controller
     {
         return $this->params;
     }
+
+    function getRequest()
+    {
+        return $this->request;
+    }
 }

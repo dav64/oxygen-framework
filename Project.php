@@ -41,6 +41,9 @@ Class Project
 
     public function __construct($app_folder)
     {
+        // TODO : loading config (default controller, error controller, ...)
+
+
         $this->autoloader = new Autoloader($app_folder);
         $this->router = new Router();
     }
@@ -50,9 +53,9 @@ Class Project
         $this->autoloader->addClassType($type, $folder);
     }
 
-    public function addRoute($name, $controller, $action, $regex = false)
+    public function addRoute($name, $options)
     {
-        $this->router->addRoute($name, array('controller' => $controller, 'action' => $action), $regex);
+        $this->router->addRoute($name, $options);
     }
 
     public function runAutoloader()
@@ -63,5 +66,9 @@ Class Project
     public function run()
     {
         $this->router->route();
+        /*
+        try { treat action }
+        catch {redirect to ErrorController (config)}
+        */
     }
 }
