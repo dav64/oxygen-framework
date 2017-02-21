@@ -1,4 +1,6 @@
 <?php
+class Router_Exception extends Exception {}
+
 class Router
 {
     public static $defaultController = 'index';
@@ -38,15 +40,12 @@ class Router
         }
         else if(!empty($explodedUri[0]))
         {
-            // Handle requests like '/controller/action'
-            $controllerName = ucfirst(preg_replace_callback('/[-_][a-z]/', function ($matches) {
-                $upper = strtoupper($matches[0]);
-                return $upper[1];
-            }, strtolower($explodedUri[0])));
+            // Handle requests like '/controller-name/action-name'
+            $controllerName = strtolower($explodedUri[0]);
 
             // get action name
             if (!empty($explodedUri[1]))
-                $action = str_replace(array('-', '_'), '', $explodedUri[1]);
+                $action = strtolower($explodedUri[1]);
             else
                 $action = self::$defaultAction;
         }
@@ -61,43 +60,49 @@ class Router
 
         $this->request->setControllerName($controllerName);
         $this->request->setActionName($action);
+    }
 
-        //print_r($this->request); exit;
-
+    public function dispatch()
+    {
         // Before dispatch, call plugin's function
         Project::callPluginAction('beforeDispatch', array(&$this->request));
 
-        $this->dispatch(); // TODO: put this in 'project' class + verify that request is still a valid object of REQUEST
-    }
+        $controllerSuffix = self::$controllerSuffix;
+        $actionSuffix = self::$actionSuffix;
 
-    protected function dispatch()
-    {
-       $controllerSuffix = self::$controllerSuffix;
-       $actionSuffix = self::$actionSuffix;
+        $controllerName = $this->request->getControllerName();
+        $action = $this->request->getActionName();
 
-       $controllerName = $this->request->getControllerName();
-       $action = $this->request->getActionName();
+        // Format controller and action name
+        $controllerClassName = ucfirst(preg_replace_callback('/[-_][a-z]/', function ($matches) {
+                $upper = strtoupper($matches[0]);
+                return $upper[1];
+        }, $controllerName)).$controllerSuffix;
+
+        $actionMethod = preg_replace_callback('/[-_][a-z]/', function ($matches) {
+                $upper = strtoupper($matches[0]);
+                return $upper[1];
+        }, $action).$actionSuffix;
 
         // Make the dispatch
-        if (!empty($controllerName) && class_exists($controllerName.$controllerSuffix) && is_subclass_of($controllerName.$controllerSuffix, 'Controller'))
+        if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
-            $controllerClassName = $controllerName.$controllerSuffix;
-            $controller = new $controllerClassName(); // Todo : put request & view inconstructor
-
-            $controller->request = $this->request;
-            $controller->view = new View(strtolower($controllerName).DIRECTORY_SEPARATOR.strtolower($action));
+            $controller = new $controllerClassName(
+                $this->request,
+                new View($controllerName.DIRECTORY_SEPARATOR.$action)
+            );
 
             $controller->init();
 
-            if (!empty($action) && method_exists($controller, $action.$actionSuffix))
-                call_user_func(array($controller, $action.$actionSuffix));
+            if (!empty($action) && method_exists($controller, $actionMethod))
+                call_user_func(array($controller, $actionMethod));
             else
-                throw new MVC_Exception('Method "' . $controllerName. '->'. $action.$actionSuffix.'()' . '" not exists');
+                throw new MVC_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');
 
-            $controller->view->render();
+            $controller->getView()->render();
         }
         else
-            throw new MVC_Exception('Controller "' . $controllerName . '" not exists');
+            throw new MVC_Exception('Controller "' . $controllerClassName . '" not exists or is not a controller');
     }
 
     public function addRoute($name, $routeData)
@@ -166,6 +171,38 @@ class Router
             'params' => $params,
         );
     }
-}
 
-class Router_Exception extends Exception {}
+    public function getUrlByRoute($routeName, $params)
+    {
+        $result = '';
+
+        if (isset($this->routes[$routeName]))
+        {
+            $route = $this->routes[$routeName];
+
+            $explodedRoute = explode('/', $route['url']);
+            foreach ($explodedRoute as $i => $part)
+            {
+                $explodedRoutePart = $explodedRoute[$i];
+
+                if ($explodedRoutePart[0] == ':')
+                {
+                    $paramName = substr($explodedRoutePart, 1);
+
+                    // fill parameter with (in order of presence) : provided value, default or null
+                    $explodedRoute[$i] = isset($params[$paramName])
+                        ? $params[$paramName]
+                        : (isset($route['values'][$paramName]) ? $route['values'][$paramName] : null)
+                    ;
+                }
+            }
+
+            $result = implode('/', $explodedRoute);
+            // Don't bother with the last '/'
+            if (substr($result, -1) == '/')
+                $result = substr($result, 0, -1);
+        }
+
+        return '/'.$result;
+    }
+}

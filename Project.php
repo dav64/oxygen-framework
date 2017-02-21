@@ -12,8 +12,12 @@ class MVC_Exception extends Exception { }
 // Main application handler
 Class Project
 {
+    private static $instance = null;
+
     private $autoloader;
     private $router;
+
+    private $request;
 
     public static $pluginClass = 'Plugins';
 
@@ -29,7 +33,6 @@ Class Project
                     array($plugins, $action),
                     $params
                 );
-                //$plugins->$action($this);
             else
                 throw new MVC_Exception('Plugins class "' . self::$pluginClass . '" doesn\'t extend "Plugin" class');
         }
@@ -39,7 +42,15 @@ Class Project
         }
     }
 
-    public function __construct($app_folder)
+    public static function getInstance($app_folder = '')
+    {
+        if (self::$instance == null)
+            self::$instance = new Project($app_folder);
+
+        return self::$instance;
+    }
+
+    private function __construct($app_folder)
     {
         // TODO : loading config (default controller, error controller, ...)
 
@@ -58,6 +69,11 @@ Class Project
         $this->router->addRoute($name, $options);
     }
 
+    public function getUrlByRoute($routeName, $params)
+    {
+        return $this->router->getUrlByRoute($routeName, $params);
+    }
+
     public function runAutoloader()
     {
         $this->autoloader->run();
@@ -66,6 +82,8 @@ Class Project
     public function run()
     {
         $this->router->route();
+        $this->router->dispatch();
+
         /*
         try { treat action }
         catch {redirect to ErrorController (config)}

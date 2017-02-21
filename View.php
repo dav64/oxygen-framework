@@ -1,4 +1,7 @@
 <?php
+class View_Exception extends Exception {}
+class Helper_Exception extends Exception {}
+
 class View
 {
     CONST VIEW_RENDER_BRACKETS_TAGS = 1;
@@ -35,7 +38,7 @@ class View
             return call_user_func_array(array($helper, $method), $args);
         }
         else
-            throw new MVC_Exception('Helper "'.$method.'" not found');
+            throw new Helper_Exception('Helper "'.$method.'" not found');
     }
 
     public static function registerHelper($method, $class)
@@ -117,25 +120,36 @@ class View
     {
         $this->_viewVars = array_merge($this->_viewVars, $parameters);
 
+        $viewFilename = self::$viewsFolder . DIRECTORY_SEPARATOR . $template;
+
+        if (!is_readable($viewFilename))
+            throw new View_Exception('Partial file "'.$viewFilename.'" cannot be found');
+
         // Include file in buffer and return it
         ob_start();
-        include self::$viewsFolder . DIRECTORY_SEPARATOR . $template;
+        include $viewFilename;
         return ob_get_clean();
     }
 
-    public function pparse($template, array $parameters = array())
+    // Simple Page template parse
+    public function pparse($template, array $parameters = array(), $deleteNotFound = true)
     {
         array_merge($this->_viewVars, $parameters);
 
-        $contents = file_get_contents(self::$viewsFolder . DIRECTORY_SEPARATOR . $template);
+        $viewFilename = self::$viewsFolder . DIRECTORY_SEPARATOR . $template;
+
+        if (!is_readable($viewFilename))
+            throw new View_Exception('Parsed view "'.$viewFilename.'" cannot be found');
+
+        $contents = file_get_contents($viewFilename);
 
         foreach($parameters as $parameter => $value)
         {
             $contents = str_replace('{'."$parameter".'}', $value, $contents);
         }
 
-        // My first written RegExp ^^
-        $contents = preg_replace('/{\w+}/', '', $contents);
+        if ($deleteNotFound)
+            $contents = preg_replace('/{\w+}/', '', $contents); // My first written RegExp ^^
 
         return $contents;
     }

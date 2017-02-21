@@ -34,14 +34,14 @@ class Request
 
     public function getParam($paramName, $defaultValue = null)
     {
-        if (isset($this->$params[$paramName]))
-            return $this->$params[$paramName];
+        if (isset($this->params[$paramName]))
+            return $this->params[$paramName];
         return $defaultValue;
     }
 
     public function setParams($params)
     {
-        $this->$params = $params;
+        $this->params = $params;
         return $this;
     }
 }
