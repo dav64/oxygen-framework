@@ -4,11 +4,9 @@ class Controller_Exception extends Exception {}
 class Controller
 {
     protected $_request = null;
-
-    protected $_vars = array();
     protected $_params = array();
 
-    function __construct($request, $view)
+    public function __construct($request, $view)
     {
         $this->_request = $request;
         $this->view = $view;
@@ -19,17 +17,17 @@ class Controller
         // Init function
     }
 
-    function setParams($params)
+    public function setParams($params)
     {
         $this->_params = $params;
     }
 
-    function getRequest()
+    public function getRequest()
     {
         return $this->_request;
     }
 
-    function getView()
+    public function getView()
     {
         return $this->view;
     }

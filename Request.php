@@ -10,6 +10,11 @@ class Request
         return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 
+    public function getUri()
+    {
+        return $_SERVER["REQUEST_URI"];
+    }
+
     public function getControllerName()
     {
         return $this->controllerName;
@@ -39,9 +44,20 @@ class Request
         return $defaultValue;
     }
 
-    public function setParams($params)
+    public function setParam($paramName, $value)
+    {
+        $this->params[$paramName] = $value;
+        return $this;
+    }
+
+    public function setAllParams($params)
     {
         $this->params = $params;
         return $this;
+    }
+
+    public function getAllParams()
+    {
+        return $this->params;
     }
 }

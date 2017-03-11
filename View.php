@@ -4,8 +4,11 @@ class Helper_Exception extends Exception {}
 
 class View
 {
-    CONST VIEW_RENDER_BRACKETS_TAGS = 1;
-    CONST VIEW_RENDER_PHP = 2;
+    CONST RENDER_PARTIAL = 1;
+    CONST RENDER_LAYOUTS = 2;
+    CONST RENDER_MAIN_LAYOUT = 4;
+
+    CONST RENDER_ALL = 7;
 
     public static $viewsFolder = '';
     public static $fileTypes = array();
@@ -20,7 +23,13 @@ class View
     protected $_layout = array();
 
     protected $_viewVars = array();
-    protected $_enableRender = true;
+    protected $_enableRender = array(
+        self::RENDER_PARTIAL => true,
+        self::RENDER_LAYOUTS => true,
+        self::RENDER_MAIN_LAYOUT => true
+    );
+
+    protected $_content = '';
 
     function __construct($viewFilename = '')
     {
@@ -66,14 +75,30 @@ class View
         unset($this->_viewVars[$name]);
     }
 
-    public function disableRender($disable = true)
+    private function _setRender($type, $canRender)
     {
-        $this->_enableRender = !$disable;
+        foreach ($this->_enableRender as $renderType => $renderValue)
+        {
+            if ($renderType & $type)
+                $this->_enableRender[$renderType] = $canRender;
+        }
     }
 
-    public function canRender()
+    public function disableRender($type = self::RENDER_PARTIAL)
     {
-        return $this->_enableRender;
+        $this->_setRender($type, false);
+        return $this;
+    }
+
+    public function enableRender($type = self::RENDER_PARTIAL)
+    {
+        $this->_setRender($type, true);
+        return $this;
+    }
+
+    public function canRender($type = self::RENDER_PARTIAL)
+    {
+        return isset($this->_enableRender[$type]) ? $this->_enableRender[$type] : null;
     }
 
     public static function setMainLayout($layoutFile)
@@ -96,24 +121,27 @@ class View
         Project::callPluginAction('beforeAddingLayout', array(&$this));
 
         // Append any response done before render
-        $ob_render = $this->content = ob_get_clean();
+        $ob_render = $this->_content = ob_get_clean();
 
-        if ($this->_enableRender)
+        if ($this->canRender(self::RENDER_PARTIAL))
         {
             if (!empty($this->_viewFilename))
-                $this->content = $this->partial($this->_viewFilename).$ob_render;
+                $this->_content = $this->partial($this->_viewFilename).$ob_render;
+        }
 
+        if ($this->canRender(self::RENDER_LAYOUTS))
+        {
             foreach ($this->_layout as $layoutFile) {
-                $this->content = $this->partial($layoutFile, array('content' => $this->content));
+                $this->_content = $this->partial($layoutFile, array('content' => $this->_content));
             }
         }
 
-        if (!empty(self::$mainLayout))
-            $this->content = $this->partial(self::$mainLayout, array('content' => $this->content));
+        if (!empty(self::$mainLayout) && $this->canRender(self::RENDER_MAIN_LAYOUT))
+            $this->_content = $this->partial(self::$mainLayout, array('content' => $this->_content));
 
         Project::callPluginAction('beforeRender', array(&$this));
 
-        echo $this->content;
+        echo $this->_content;
     }
 
     public function partial($template, array $parameters = array())

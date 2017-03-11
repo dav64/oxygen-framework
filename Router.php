@@ -3,30 +3,23 @@ class Router_Exception extends Exception {}
 
 class Router
 {
-    public static $defaultController = 'index';
-    public static $defaultAction = 'index';
-    public static $controllerSuffix = 'Controller';
-    public static $actionSuffix = 'Action';
-
     protected $routes = array();
     protected $regexRoutes = array();
 
-    protected $request = null;
-
-    public function route()
+    public function route(&$request)
     {
-        $this->request = new Request();
+        $config = Config::getInstance();
 
         $controllerName = null;
         $actionName = null;
 
-        $uri = strtok($_SERVER["REQUEST_URI"],'?');
+        $request_uri = explode('?', $request->getUri());
+        $uri = $request_uri[0];
 
-        // Don't bother with the last '/'
-        if (substr($uri, -1) == '/')
-            $uri = substr($uri, 0, -1);
+        // Don't bother with the beginig and last '/'
+        $uri = trim($uri, '/');
 
-        $explodedUri = explode('/', substr($uri, 1));
+        $explodedUri = explode('/', $uri);
 
         $routeData = $this->getRouteByUri($uri);
 
@@ -36,7 +29,7 @@ class Router
             $controllerName = $routeData['route']['controller'];
             $action = $routeData['route']['action'];
 
-            $this->request->setParams($routeData['params']);
+            $request->setAllParams($routeData['params']);
         }
         else if(!empty($explodedUri[0]))
         {
@@ -47,31 +40,40 @@ class Router
             if (!empty($explodedUri[1]))
                 $action = strtolower($explodedUri[1]);
             else
-                $action = self::$defaultAction;
+                $action = $config->getOption('defaultRoute/action', 'index');
         }
         else
         {
             // We are requesting the root page
-            $controllerName = self::$defaultController;
-            $action = self::$defaultAction;
+            $controllerName = $config->getOption('defaultRoute/controller', 'index');
+            $action = $config->getOption('defaultRoute/action', 'index');
         }
 
-        $action = strtolower($action);
+        // Convert get parameters to request parameters
+        if (!empty($request_uri[1]))
+        {
+            $params = array();
+            parse_str($request_uri[1], $params);
 
-        $this->request->setControllerName($controllerName);
-        $this->request->setActionName($action);
+            foreach ($params as $name => $value)
+            {
+                $request->setParam($name, $value);
+            }
+        }
+
+        $request->setControllerName($controllerName);
+        $request->setActionName($action);
     }
 
-    public function dispatch()
+    public function dispatch($request)
     {
-        // Before dispatch, call plugin's function
-        Project::callPluginAction('beforeDispatch', array(&$this->request));
+        $config = Config::getInstance();
 
-        $controllerSuffix = self::$controllerSuffix;
-        $actionSuffix = self::$actionSuffix;
+        $controllerSuffix = $config->getOption('routerSuffix/controller', 'Controller');
+        $actionSuffix = $config->getOption('routerSuffix/action', 'Action');
 
-        $controllerName = $this->request->getControllerName();
-        $action = $this->request->getActionName();
+        $controllerName = $request->getControllerName();
+        $action = $request->getActionName();
 
         // Format controller and action name
         $controllerClassName = ucfirst(preg_replace_callback('/[-_][a-z]/', function ($matches) {
@@ -88,7 +90,7 @@ class Router
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
             $controller = new $controllerClassName(
-                $this->request,
+                $request,
                 new View($controllerName.DIRECTORY_SEPARATOR.$action)
             );
 
@@ -97,12 +99,12 @@ class Router
             if (!empty($action) && method_exists($controller, $actionMethod))
                 call_user_func(array($controller, $actionMethod));
             else
-                throw new MVC_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');
+                throw new Router_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');
 
             $controller->getView()->render();
         }
         else
-            throw new MVC_Exception('Controller "' . $controllerClassName . '" not exists or is not a controller');
+            throw new Router_Exception('Controller "' . $controllerClassName . '" not exists or is not a controller');
     }
 
     public function addRoute($name, $routeData)
@@ -121,17 +123,24 @@ class Router
         $params = array();
         $foundRoute = false;
 
-        $explodedUri = explode('/', substr($uri, 1));
+        $explodedUri = explode('/', $uri);
 
         foreach ($this->routes as $name => $route)
         {
             $params = array();
             if (isset($route['url'], $route['controller'], $route['action']))
             {
-                $explodedRoute = explode('/', $route['url']);
+                // Don't bother with the begining and last '/'
+                $routeUrl = trim($route['url'], '/');
 
-                // consider we have probably found the route
-                $keepRoute = true;
+                $explodedRoute = explode('/', $routeUrl);
+
+                // Route and Uri have different length => it is not this route
+                if (count($explodedRoute) != count($explodedUri))
+                    continue;
+
+                // Consider we have probably found the route
+                $foundRoute = true;
 
                 foreach ($explodedUri as $i => $part)
                 {
@@ -141,7 +150,7 @@ class Router
                     if ($explodedRoutePart != $explodedUriPart && $explodedRoutePart[0] != ':')
                     {
                         // Wrong route, remove params and treat next
-                        $keepRoute = false;
+                        $foundRoute = false;
                         $params = array();
                         break;
                     }
@@ -158,7 +167,7 @@ class Router
                 }
 
                 // If we found the route, get out
-                if ($keepRoute)
+                if ($foundRoute)
                 {
                     $result = $route;
                     break;
@@ -198,9 +207,9 @@ class Router
             }
 
             $result = implode('/', $explodedRoute);
-            // Don't bother with the last '/'
-            if (substr($result, -1) == '/')
-                $result = substr($result, 0, -1);
+
+            // Don't bother with the beginig and last '/'
+            $result = trim($result, '/');
         }
 
         return '/'.$result;
