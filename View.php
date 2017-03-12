@@ -84,19 +84,19 @@ class View
         }
     }
 
-    public function disableRender($type = self::RENDER_PARTIAL)
+    public function disableRender($type = self::RENDER_ALL)
     {
         $this->_setRender($type, false);
         return $this;
     }
 
-    public function enableRender($type = self::RENDER_PARTIAL)
+    public function enableRender($type = self::RENDER_ALL)
     {
         $this->_setRender($type, true);
         return $this;
     }
 
-    public function canRender($type = self::RENDER_PARTIAL)
+    public function canRender($type = self::RENDER_ALL)
     {
         return isset($this->_enableRender[$type]) ? $this->_enableRender[$type] : null;
     }

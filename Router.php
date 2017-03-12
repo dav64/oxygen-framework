@@ -112,7 +112,7 @@ class Router
         if (isset($this->routes[$name]))
             throw new Router_Exception('Route "'.$name.'" already exists');
         else if (!isset($routeData['url'], $routeData['controller'], $routeData['action']))
-            throw new Router_Exception('Route "'.$name.'" does not contain all of mandatory fields: "url", "controller" or "action"');
+            throw new Router_Exception('Route "'.$name.'" is missing one of mandatory fields: "url", "controller" or "action"');
         else
             $this->routes[$name] = $routeData;
     }
@@ -161,7 +161,7 @@ class Router
                         // fill parameter with (in order of presence) : provided value, default or null
                         $params[$paramName] = !empty($explodedUriPart)
                             ? $explodedUriPart
-                            : (isset($route['values'][$paramName]) ? $route['values'][$paramName] : null)
+                            : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
                         ;
                     }
                 }
@@ -201,7 +201,7 @@ class Router
                     // fill parameter with (in order of presence) : provided value, default or null
                     $explodedRoute[$i] = isset($params[$paramName])
                         ? $params[$paramName]
-                        : (isset($route['values'][$paramName]) ? $route['values'][$paramName] : null)
+                        : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
                     ;
                 }
             }

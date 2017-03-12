@@ -5,6 +5,7 @@ class Controller
 {
     protected $_request = null;
     protected $_params = array();
+    protected $view = null;
 
     public function __construct($request, $view)
     {

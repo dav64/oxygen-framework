@@ -22,5 +22,4 @@ class Oxygen_Utils
         header('Location: '.$url);
         exit;
     }
-
 }

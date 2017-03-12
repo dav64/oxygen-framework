@@ -7,7 +7,7 @@ class Oxygen_ModelsGenerator
             'table'                // Keep Table name as class
             'table' => 'className' // Set new className for this table
         );
-     */
+    */
 
     public static function generateModels(
         $classPath,
@@ -76,7 +76,8 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(INDENTATION, 3).'$this->'.self::convertToClassName($field['Field'])." = '';\n";
+                $fieldValue = (strpos($field['Type'], 'int') !== false) ? '0' : "''";
+                $class .= str_repeat(INDENTATION, 3).'$this->'.self::convertToClassName($field['Field'])." = {$fieldValue};\n";
             }
             $class .= str_repeat(INDENTATION, 2)."}\n";
 
