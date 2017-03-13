@@ -42,4 +42,60 @@ class Oxygen_Db
     {
         self::$adaptersList = $adaptersList;
     }
+
+    public static function find($db, $table, $class, $criterion = array(), $returnObjects = false)
+    {
+        $result = array();
+
+        if (is_array($criterion))
+        {
+            $select = '';
+            $from = '';
+            $where = '';
+            $other = '';
+
+            if (empty($criterion['from']))
+                $criterion['from'] = $table;
+
+            if (empty($criterion['select']))
+                $criterion['select'] = '*';
+
+            $select = is_array($criterion['select']) ? implode(',', $criterion['select']) : $criterion['select'];
+            $from = is_array($criterion['from']) ? implode(',', $criterion['from']) : $criterion['from'];
+
+            if (!empty($criterion['where']))
+                $where = 'WHERE ('. (is_array($criterion['where']) ? implode(') AND (', $criterion['where']) : $criterion['where']). ')';
+
+            if (!empty($criterion['other']))
+                $other = is_array($criterion['other']) ? implode("\n", $criterion['other']) : $criterion['other'];
+
+
+            $query = 'SELECT '.$select.'
+                      FROM '.$from.'
+                      '.$where.'
+                      '.$other;
+
+            $res = $db->prepare($query);
+
+            if (!empty($criterion['bind']))
+            {
+                foreach ($criterion['bind'] as $param => $value)
+                {
+                    $res->bindValue($param, $value);
+                }
+            }
+
+            $res->execute();
+
+            while ($row = $res->fetch())
+            {
+                if ($returnObjects)
+                    $result[] = new $class($row);
+                else
+                    $result[] = $row;
+            }
+        }
+
+        return $result;
+    }
 }

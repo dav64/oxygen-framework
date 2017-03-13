@@ -175,59 +175,13 @@ class Oxygen_ModelsGenerator
             $findPrototype = <<<'EOM'
     public static function find($criterion = array(), $returnObjects = false)
     {
-        $result = array();
-
-        if (is_array($criterion))
-        {
-            $db = __ADAPTER__;
-            $select = '';
-            $from = '';
-            $where = '';
-            $other = '';
-
-            if (empty($criterion['from']))
-                $criterion['from'] = '__TABLE__';
-
-            if (empty($criterion['select']))
-                $criterion['select'] = '*';
-
-            $select = is_array($criterion['select']) ? implode(',', $criterion['select']) : $criterion['select'];
-            $from = is_array($criterion['from']) ? implode(',', $criterion['from']) : $criterion['from'];
-
-            if (!empty($criterion['where']))
-                $where = 'WHERE ('. (is_array($criterion['where']) ? implode(') AND (', $criterion['where']) : $criterion['where']). ')';
-
-            if (!empty($criterion['other']))
-                $other = is_array($criterion['other']) ? implode("\n", $criterion['other']) : $criterion['other'];
-
-
-            $query = 'SELECT '.$select.'
-                      FROM '.$from.'
-                      '.$where.'
-                      '.$other;
-
-            $res = $db->prepare($query);
-
-            if (!empty($criterion['bind']))
-            {
-                foreach ($criterion['bind'] as $param => $value)
-                {
-                    $res->bindValue($param, $value);
-                }
-            }
-
-            $res->execute();
-
-            while ($row = $res->fetch())
-            {
-                if ($returnObjects)
-                    $result[] = new Model___CLASSNAME__($row);
-                else
-                    $result[] = $row;
-            }
-        }
-
-        return $result;
+        return Oxygen_Db::find(
+            __ADAPTER__,
+            __TABLE__,
+            'Model___CLASSNAME__',
+            $criterion,
+            $returnObjects
+        );
     }
 EOM;
             $class .= str_replace(
