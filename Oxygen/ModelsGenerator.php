@@ -177,7 +177,7 @@ class Oxygen_ModelsGenerator
     {
         return Oxygen_Db::find(
             __ADAPTER__,
-            __TABLE__,
+            '__TABLE__',
             'Model___CLASSNAME__',
             $criterion,
             $returnObjects

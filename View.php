@@ -15,6 +15,8 @@ class View
 
     public static $defaultExt = '.phtml';
 
+    protected $_content = '';
+
     protected static $helpers = array();
     protected static $mainLayout = NULL;
 
@@ -28,8 +30,6 @@ class View
         self::RENDER_LAYOUTS => true,
         self::RENDER_MAIN_LAYOUT => true
     );
-
-    protected $_content = '';
 
     function __construct($viewFilename = '')
     {
@@ -62,6 +62,9 @@ class View
 
     public function __set($name, $value)
     {
+        if ($name[0] == '_')
+            throw new View_Exception('trying to set reserved property');
+
         $this->_viewVars[$name] = $value;
     }
 
@@ -72,6 +75,9 @@ class View
 
     public function __unset($name)
     {
+        if ($name[0] == '_')
+            throw new View_Exception('trying to unset reserved property');
+
         unset($this->_viewVars[$name]);
     }
 
@@ -142,6 +148,17 @@ class View
         Project::callPluginAction('beforeRender', array(&$this));
 
         echo $this->_content;
+    }
+
+    public function getContent()
+    {
+        return $this->_content;
+    }
+
+    public function setContent($content)
+    {
+        $this->_content = $content;
+        return $this;
     }
 
     public function partial($template, array $parameters = array())
