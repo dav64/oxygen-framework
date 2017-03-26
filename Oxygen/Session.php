@@ -12,6 +12,12 @@ class Oxygen_Session
         }
     }
 
+    public function destroy()
+    {
+        session_destroy();
+        self::$session_started = true;
+    }
+
     public function __get($name)
     {
         return isset($_SESSION[$name]) ? unserialize($_SESSION[$name]) : null;

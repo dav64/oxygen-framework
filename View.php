@@ -124,29 +124,41 @@ class View
 
     public function render()
     {
-        Project::callPluginAction('beforeAddingLayout', array(&$this));
-
         // Append any response done before render
         $ob_render = $this->_content = ob_get_clean();
 
-        if ($this->canRender(self::RENDER_PARTIAL))
-        {
-            if (!empty($this->_viewFilename))
-                $this->_content = $this->partial($this->_viewFilename).$ob_render;
-        }
+        ob_start();
 
-        if ($this->canRender(self::RENDER_LAYOUTS))
+        try
         {
-            foreach ($this->_layout as $layoutFile) {
-                $this->_content = $this->partial($layoutFile, array('content' => $this->_content));
+            Project::callPluginAction('beforeAddingLayout', array(&$this));
+
+            if ($this->canRender(self::RENDER_PARTIAL))
+            {
+                if (!empty($this->_viewFilename))
+                    $this->_content = $this->partial($this->_viewFilename).$ob_render;
             }
+
+            if ($this->canRender(self::RENDER_LAYOUTS))
+            {
+                foreach ($this->_layout as $layoutFile) {
+                    $this->_content = $this->partial($layoutFile, array('content' => $this->_content));
+                }
+            }
+
+            if (!empty(self::$mainLayout) && $this->canRender(self::RENDER_MAIN_LAYOUT))
+                $this->_content = $this->partial(self::$mainLayout, array('content' => $this->_content));
+
+            Project::callPluginAction('beforeRender', array(&$this));
+
+        }
+        catch (Exception $e)
+        {
+            ob_get_clean();
+            throw $e;
         }
 
-        if (!empty(self::$mainLayout) && $this->canRender(self::RENDER_MAIN_LAYOUT))
-            $this->_content = $this->partial(self::$mainLayout, array('content' => $this->_content));
-
-        Project::callPluginAction('beforeRender', array(&$this));
-
+        ob_get_clean();
         echo $this->_content;
     }
 

@@ -81,13 +81,13 @@ class Oxygen_Db
             {
                 foreach ($criterion['bind'] as $param => $value)
                 {
-                    $res->bindValue($param, $value);
+                    $res->bindValue($param, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
                 }
             }
 
             $res->execute();
 
-            while ($row = $res->fetch())
+            while ($row = $res->fetch(PDO::FETCH_ASSOC))
             {
                 if ($returnObjects)
                     $result[] = new $class($row);
