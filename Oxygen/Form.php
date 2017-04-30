@@ -71,7 +71,11 @@ class Oxygen_Form
 
                 $optionsData .= ' '.$key.'="'.$value.'"';
             }
-            $optionsData .= '>'.$option['caption'].'</option>';
+
+            $optionsData .= '>';
+            if (isset($option['caption']))
+                $optionsData .= $option['caption'];
+            $optionsData .= '</option>';
         }
 
         // Create the markup

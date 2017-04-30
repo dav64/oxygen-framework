@@ -14,7 +14,7 @@ class Oxygen_Utils
     public static function isDev()
     {
         $env = getenv('APPLICATION_ENV') ?: 'development';
-        return $env != 'production';
+        return $env == 'development';
     }
 
     public static function redirect($url)
