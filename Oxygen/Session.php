@@ -15,7 +15,7 @@ class Oxygen_Session
     public function destroy()
     {
         session_destroy();
-        self::$session_started = true;
+        self::$session_started = false;
     }
 
     public function __get($name)
