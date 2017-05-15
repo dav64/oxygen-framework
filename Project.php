@@ -100,7 +100,7 @@ Class Project
 
         try
         {
-            // Before dispatch, call plugin's function
+            // Before dispatch, call plugin's handler function
             self::callPluginAction('beforeDispatch', array(&$this->request));
 
             // Make the actual dispatch

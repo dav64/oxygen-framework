@@ -16,7 +16,7 @@ class Router
         $request_uri = explode('?', $request->getUri());
         $uri = $request_uri[0];
 
-        // Don't bother with the beginig and last '/'
+        // Don't bother with the begining and last '/'
         $uri = trim($uri, '/');
 
         $explodedUri = explode('/', $uri);
@@ -208,7 +208,7 @@ class Router
 
             $result = implode('/', $explodedRoute);
 
-            // Don't bother with the beginig and last '/'
+            // Don't bother with the begining and last '/'
             $result = trim($result, '/');
         }
 
