@@ -1,8 +1,9 @@
 <?php
 
-class Generator_Exception extends Exception {};
+// TODO: general functionsin ModelGenerator : getTables, getFieldsList (return array of field => type),
+// that other subclasses can extend to adapt to all DB types
 
-class Oxygen_ModelsGenerator
+class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
 {
     /* $special_tables format
           array(
@@ -26,12 +27,7 @@ class Oxygen_ModelsGenerator
         if (!$db)
             throw new Generator_Exception("Unable to connect to the database");
 
-        $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_NUM);
-
-        $res = $db->prepare("show tables");
-
-        $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-
+        $res = $db->prepare("SELECT name FROM sqlite_master WHERE type='table';");
         $res->execute();
 
         $tables = $res->fetchAll();
@@ -43,7 +39,7 @@ class Oxygen_ModelsGenerator
         {
             $class = '<?php'."\n";
 
-            $tableName = $table[0];
+            $tableName = $table['name'];
 
             if (in_array($tableName, array_keys($special_tables)) || substr($tableName, -1) != 's')
                 $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : self::convertToClassName($tableName);
@@ -52,7 +48,7 @@ class Oxygen_ModelsGenerator
 
             $name = $tableName;
 
-            $res = $db->prepare("show columns from ".$tableName);
+            $res = $db->prepare("PRAGMA table_info(".$tableName.");");
             $res->execute();
             $fields = $res->fetchAll();
 
@@ -62,7 +58,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 1).'protected $'.self::convertToClassName($field['Field'])." = null; \n";
+                $class .= str_repeat(self::INDENTATION, 1).'protected $'.self::convertToClassName($field['name'])." = null; \n";
             }
 
             // Constructor
@@ -77,7 +73,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['Field']).' = $fields[\''.$field['Field']."']; \n";
+                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['name']).' = $fields[\''.$field['name']."']; \n";
             }
             $class .= str_repeat(self::INDENTATION, 2)."}\n";
             $class .= str_repeat(self::INDENTATION, 2)."else \n";
@@ -85,8 +81,8 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $fieldValue = (strpos($field['Type'], 'int') !== false) ? '0' : "''";
-                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['Field'])." = {$fieldValue};\n";
+                $fieldValue = (strpos($field['type'], 'INTEGER') !== false) ? '0' : "''";
+                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['name'])." = {$fieldValue};\n";
             }
             $class .= str_repeat(self::INDENTATION, 2)."}\n";
 
@@ -99,7 +95,7 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat(self::INDENTATION, 3).'INSERT INTO '.$tableName.' (';
             foreach ($fields as $field)
             {
-                $class .= '`'.$field['Field'].'`';
+                $class .= '`'.$field['name'].'`';
                 if ($field != $last_field)
                     $class .= ", ";
             }
@@ -108,14 +104,14 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat(self::INDENTATION, 3).'VALUES (';
             foreach ($fields as $field)
             {
-                $class .= ':'.$field['Field'];
+                $class .= ':'.$field['name'];
                 if ($field != $last_field)
                     $class .= ", ";
             }
             $class .= ') ON DUPLICATE KEY UPDATE'."\n";
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 3).'`'.$field['Field'].'` = VALUES('.$field['Field'].')';
+                $class .= str_repeat(self::INDENTATION, 3).'`'.$field['name'].'` = VALUES('.$field['name'].')';
                 if ($field != $last_field)
                     $class .= ",";
                 $class .= "\n";
@@ -124,9 +120,9 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['Field']);
+                $camelCaseField = self::convertToClassName($field['name']);
 
-                $class .= str_repeat(self::INDENTATION, 2).'$res->bindValue(\':'.$field['Field'].'\', $this->'.$camelCaseField.'); '."\n";
+                $class .= str_repeat(self::INDENTATION, 2).'$res->bindValue(\':'.$field['name'].'\', $this->'.$camelCaseField.'); '."\n";
             }
 
             $class .= "\n";
@@ -143,7 +139,7 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat(self::INDENTATION, 3).'SELECT ';
             foreach ($fields as $field)
             {
-                $class .= '`'.$field['Field'].'`';
+                $class .= '`'.$field['name'].'`';
                 if ($field != $last_field)
                     $class .= ", ";
             }
@@ -159,9 +155,9 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat(self::INDENTATION, 2).'{'."\n";
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['Field']);
+                $camelCaseField = self::convertToClassName($field['name']);
 
-                $class .= str_repeat(self::INDENTATION, 3).'$this->'.$camelCaseField.' = $row[\''.$field['Field'].'\'];'."\n";
+                $class .= str_repeat(self::INDENTATION, 3).'$this->'.$camelCaseField.' = $row[\''.$field['name'].'\'];'."\n";
             }
             $class .= str_repeat(self::INDENTATION, 2).'}'."\n";
 
@@ -203,7 +199,7 @@ EOM;
             $class .= str_repeat(self::INDENTATION, 1).'// Setters'."\n";
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['Field']);
+                $camelCaseField = self::convertToClassName($field['name']);
 
                 $class .= str_repeat(self::INDENTATION, 1).'function set'.ucfirst($camelCaseField).'($'.$camelCaseField.')'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'{'."\n";
@@ -220,9 +216,9 @@ EOM;
             $class .= str_repeat(self::INDENTATION, 1).'// Getters'."\n";
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 1).'function get'.ucfirst(self::convertToClassName($field['Field'])).'()'."\n";
+                $class .= str_repeat(self::INDENTATION, 1).'function get'.ucfirst(self::convertToClassName($field['name'])).'()'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'{'."\n";
-                $class .= str_repeat(self::INDENTATION, 2).'return $this->'.self::convertToClassName($field['Field']).';'."\n";
+                $class .= str_repeat(self::INDENTATION, 2).'return $this->'.self::convertToClassName($field['name']).';'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'}'."\n";
                 if ($field != $last_field)
                    $class .= "\n";
@@ -247,12 +243,5 @@ EOM;
                 file_put_contents($classPath . ucfirst($className).'.php', $model);
             }
         }
-    }
-
-    protected static function convertToClassName($table_name)
-    {
-        return preg_replace_callback('/_[a-z]/', function ($matches) {
-          return strtoupper($matches[0])[1];
-        }, $table_name);
     }
 }

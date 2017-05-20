@@ -19,12 +19,12 @@ class Oxygen_Db
         else if (isset($adaptersList[$adapterName]))
         {
             try {
-                self::$registeredAdapters[$adapterName] =
-                    new PDO(
-                        $adaptersList[$adapterName]['dsn'],
-                        $adaptersList[$adapterName]['user'],
-                        $adaptersList[$adapterName]['password']
-                    );
+                $dsn = isset($adaptersList[$adapterName]['dsn']) ? $adaptersList[$adapterName]['dsn'] : '';
+                $login = isset($adaptersList[$adapterName]['user']) ? $adaptersList[$adapterName]['user'] : '';
+                $password = isset($adaptersList[$adapterName]['password']) ? $adaptersList[$adapterName]['password'] : '';
+
+                self::$registeredAdapters[$adapterName] = new PDO($dsn, $login, $password);
+                self::$registeredAdapters[$adapterName]->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
                 self::$registeredAdapters[$adapterName]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 return self::$registeredAdapters[$adapterName];
@@ -36,6 +36,8 @@ class Oxygen_Db
         }
         else
             error_log('Adapter "'.$adapterName.'" not found');
+
+        return false;
     }
 
     public static function loadAdapters($adaptersList)
@@ -87,7 +89,7 @@ class Oxygen_Db
 
             $res->execute();
 
-            while ($row = $res->fetch(PDO::FETCH_ASSOC))
+            while ($row = $res->fetch())
             {
                 if ($returnObjects)
                     $result[] = new $class($row);

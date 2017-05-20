@@ -22,4 +22,10 @@ class Oxygen_Utils
         header('Location: '.$url);
         exit;
     }
+
+    public static function url($routeName, $params = array())
+    {
+        $project = Project::getInstance();
+        return $project->getUrlByRoute($routeName, $params);
+    }
 }
