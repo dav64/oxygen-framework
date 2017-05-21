@@ -12,6 +12,9 @@ class Oxygen_Db
         return self::getAdapter('default');
     }
 
+    /**
+     * get a PDO db adapter by name
+     * */
     public static function getAdapter($adapterName)
     {
         $adaptersList = self::$adaptersList;
@@ -47,6 +50,18 @@ class Oxygen_Db
         self::$adaptersList = $adaptersList;
     }
 
+    /**
+     * Find rows in database according to criterion
+     *
+     * $db PDO : Database adapter
+     * $table string : table name
+     * $class string : if $returnObjects, rows will be returned as $class instances
+     * $criterion array : find criterion as array(
+     *      'select' => array('field1', 'field2')
+     *      'where' => array('cond1', 'cond2')
+     *      'other' => array('ORDER BY something')
+     * )
+     * */
     public static function find($db, $table, $class, $criterion = array(), $returnObjects = false)
     {
         $result = array();
