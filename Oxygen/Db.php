@@ -1,5 +1,7 @@
 <?php
 
+class Db_Exception extends Exception {}
+
 class Oxygen_Db
 {
     private static $registeredAdapters = array();
@@ -87,7 +89,17 @@ class Oxygen_Db
                 }
             }
 
-            $res->execute();
+            try
+            {
+                $res->execute();
+            }
+            catch (Exception $e)
+            {
+                $queryInfo = "\n" . (!empty($criterion['bind']) ? "Prepared query was: " : 'Query was: ');
+                $queryInfo .= $query;
+
+                throw new Db_Exception($e->getMessage().$queryInfo);
+            }
 
             while ($row = $res->fetch())
             {
