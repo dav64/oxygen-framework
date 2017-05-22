@@ -11,9 +11,7 @@ class View
     CONST RENDER_ALL = 7;
 
     public static $viewsFolder = '';
-    public static $fileTypes = array();
-
-    public static $defaultExt = '.phtml';
+    public static $defaultExt = '';
 
     protected $_content = '';
 
@@ -37,6 +35,11 @@ class View
         ob_start();
     }
 
+    public static function setHelpers($helpers)
+    {
+        self::$helpers = $helpers;
+    }
+
     public function __call($method, $args)
     {
         $helperClass = isset(self::$helpers[$method]) ? self::$helpers[$method] : null;
@@ -48,11 +51,6 @@ class View
         }
         else
             throw new Helper_Exception('Helper "'.$method.'" not found');
-    }
-
-    public static function registerHelper($method, $class)
-    {
-        self::$helpers[$method] = $class;
     }
 
     public function __get($name)
@@ -126,7 +124,6 @@ class View
     {
         // Append any response done before render
         $ob_render = $this->_content = ob_get_clean();
-
         ob_start();
 
         try
@@ -175,6 +172,8 @@ class View
 
     public function partial($template, array $parameters = array())
     {
+        $config = Config::getInstance();
+
         $this->_viewVars = array_merge($this->_viewVars, $parameters);
 
         $viewFilename = self::$viewsFolder . DIRECTORY_SEPARATOR . $template;

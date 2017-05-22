@@ -10,6 +10,9 @@ class Router
     {
         $config = Config::getInstance();
 
+        $defaultController = $config->getOption('router/default/controller', 'index');
+        $defaultAction = $config->getOption('router/default/action', 'index');
+
         $controllerName = null;
         $actionName = null;
 
@@ -40,13 +43,13 @@ class Router
             if (!empty($explodedUri[1]))
                 $action = strtolower($explodedUri[1]);
             else
-                $action = $config->getOption('defaultRoute/action', 'index');
+                $action = $defaultAction;
         }
         else
         {
             // We are requesting the root page
-            $controllerName = $config->getOption('defaultRoute/controller', 'index');
-            $action = $config->getOption('defaultRoute/action', 'index');
+            $controllerName = $defaultController;
+            $action = $defaultAction;
         }
 
         // Convert get parameters to request parameters
@@ -69,8 +72,8 @@ class Router
     {
         $config = Config::getInstance();
 
-        $controllerSuffix = $config->getOption('routerSuffix/controller', 'Controller');
-        $actionSuffix = $config->getOption('routerSuffix/action', 'Action');
+        $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
+        $actionSuffix = $config->getOption('router/suffix/action', 'Action');
 
         $controllerName = $request->getControllerName();
         $action = $request->getActionName();
@@ -96,7 +99,7 @@ class Router
 
             $controller->init();
 
-            if (!empty($action) && method_exists($controller, $actionMethod))
+            if (!empty($action) && (method_exists($controller, $actionMethod) || method_exists($controller, '__call')))
                 call_user_func(array($controller, $actionMethod));
             else
                 throw new Router_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');
@@ -135,7 +138,7 @@ class Router
 
                 $explodedRoute = explode('/', $routeUrl);
 
-                // Route and Uri have different length => it is not this route
+                // Route and URI have different length => it is not this route
                 if (count($explodedRoute) != count($explodedUri))
                     continue;
 

@@ -28,10 +28,16 @@ class Oxygen_Mail
         $line_feed = "\r\n";
 
         if (empty($replyto))
-            $replyto = self::$DEFAULT_FROM;
+        {
+            $config = Config::getInstance();
+            $replyto = $config->getOption('mailFrom');
+        }
 
         if (empty($from))
-            $from = self::$DEFAULT_FROM;
+        {
+            $config = Config::getInstance();
+            $from = $config->getOption('mailFrom');
+        }
 
         // Setting boundaries limiters
         $boundary     = "=_".md5(rand());

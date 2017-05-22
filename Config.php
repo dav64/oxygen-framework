@@ -3,55 +3,8 @@ class Config
 {
     CONST CONFIG_NODES_SEPARATOR = '/';
 
-    // Project
-    public static $pluginClass = 'Plugins';
-
-    //---------------------------------------------------------------
-
     protected static $_instance;
-
-    protected $_options = array(
-        'routerSuffix' => array(
-            'controller' => 'Controller',
-            'action' => 'Action',
-        ),
-        'defaultRoute' => array(
-            'controller' => 'index',
-            'action' => 'index',
-        ),
-        'errorRoute' => array(
-            'controller' => 'error',
-            'action' => 'error',
-        ),
-        'view' => array(
-            'folder' => '',
-            'mainLayout' => 'layout.phtml',
-        ),
-
-        'plugins' => 'Plugins'
-    );
-
-/*
-    TODO : Config: Json Loadable
- * {
-    "Router" : {
-        "controllerSuffix ": "Controller",
-        "actionSuffix": "Action",
-        "defaultController": "index',
-        "defaultAction": "index',
-        "errorController": "error',
-        "errorAction": "error'
-    }
-    "View" : {
-        "defaultExtension" : ".phtml",
-        "viewFolder": ""
-    }
-
-    "pluginsClass": "Plugins";
-}
- * Project->setConfig('router/defaultAction'); => $config['router']['defaultAction']
- *
- */
+    protected $_options = array();
 
     public static function getInstance()
     {
@@ -59,6 +12,11 @@ class Config
             self::$_instance = new self();
 
         return self::$_instance;
+    }
+
+    public static function loadConfig($options)
+    {
+        self::$_instance->_options = $options;
     }
 
     public function getOption($name, $defaultValue = null)

@@ -7,7 +7,7 @@ class Autoloader
     // Autoloader
     // Class: Namespace_Class_Name => Namespace/ClassName
     // Controller: Class_Name => ClassNameController
-    function runAutoloader($className)
+    function autoload($className)
     {
         $classFile = null;
         $baseFolder = $this->appFolder;
@@ -42,9 +42,9 @@ class Autoloader
         $this->namespaces[$type] = $folder;
     }
 
-    function run()
+    function register()
     {
-        spl_autoload_register(array($this, 'runAutoloader'));
+        spl_autoload_register(array($this, 'autoload'));
     }
 
     private function startsWith($haystack, $needle)

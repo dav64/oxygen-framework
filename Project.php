@@ -8,46 +8,24 @@ require __DIR__ . '/Plugins.php';
 require __DIR__ . '/Config.php';
 require __DIR__ . '/Request.php';
 
+class Plugin_Exception extends Exception { }
 class Project_Exception extends Exception { }
-class MVC_Exception extends Exception { }
 
 // Main application handler
 Class Project
 {
     private static $instance = null;
+    private static $config = null;
 
     private $autoloader;
     private $router;
 
     private $request;
 
-    public static $pluginClass = 'Plugins';
-
-    public static function callPluginAction($action, $params)
-    {
-        $params = is_array($params) ? $params : array($params);
-        if (class_exists(self::$pluginClass))
-        {
-            $plugins = new self::$pluginClass();
-
-            if (is_a($plugins, 'Plugins'))
-                call_user_func_array(
-                    array($plugins, $action),
-                    $params
-                );
-            else
-                throw new MVC_Exception('Plugins class "' . self::$pluginClass . '" doesn\'t extend "Plugin" class');
-        }
-        else
-        {
-            throw new MVC_Exception('Plugin class "' . self::$pluginClass . '" Not found');
-        }
-    }
-
-    public static function create($app_folder = '')
+    public static function create($app_folder, $projectOptions = array())
     {
         if (self::$instance == null)
-            self::$instance = new Project($app_folder);
+            self::$instance = new Project($app_folder, $projectOptions);
         else
             throw new Project_Exception('Project already initalized, use getInstance() Instead');
 
@@ -62,13 +40,42 @@ Class Project
         return self::$instance;
     }
 
-    private function __construct($app_folder)
+    private function __construct($app_folder, $projectOptions)
     {
-        // TODO : loading config (default controller, error controller, ...)
-        //$this->config = Config::getInstance();
+        self::$config = Config::getInstance();
+        self::$config->loadConfig($projectOptions);
+
+        View::$viewsFolder = $app_folder . self::$config->getOption('view/folder', '/Views');
+        View::$defaultExt = self::$config->getOption('view/extension', '.phtml');
+
+        View::setHelpers(self::$config->getOption('helpers', array()));
+        View::setMainLayout(self::$config->getOption('view/mainLayout'));
 
         $this->autoloader = new Autoloader($app_folder);
         $this->router = new Router();
+    }
+
+    public static function callPluginAction($action, $params)
+    {
+        $pluginClass = self::$config->getOption('pluginsClass', 'Plugins');
+
+        $params = is_array($params) ? $params : array($params);
+        if (class_exists($pluginClass))
+        {
+            $plugins = new $pluginClass();
+
+            if (is_a($plugins, 'Plugins'))
+                call_user_func_array(
+                    array($plugins, $action),
+                    $params
+                );
+            else
+                throw new Plugin_Exception('Plugins class "' . $pluginClass . '" doesn\'t extend "Plugin" class');
+        }
+        else
+        {
+            throw new Plugin_Exception('Plugin class "' . $pluginClass . '" Not found');
+        }
     }
 
     public function addClassType($type, $folder)
@@ -86,9 +93,11 @@ Class Project
         return $this->router->getUrlByRoute($routeName, $params);
     }
 
-    public function runAutoloader()
+    public function registerAutoloader()
     {
-        $this->autoloader->run();
+        $this->addClassType('Oxygen', __DIR__ . '/Oxygen');
+
+        $this->autoloader->register();
         return $this;
     }
 
@@ -108,12 +117,10 @@ Class Project
         }
         catch (Exception $e)
         {
-            $config = Config::getInstance();
+            $errorControllerName = self::$config->getOption('router/error/controller');
+            $errorActionName = self::$config->getOption('router/error/action');
 
-            $errorControllerName = $config->getOption('errorRoute/controller');
-            $errorActionName = $config->getOption('errorRoute/action');
-
-            // If error controller / action is defined, let them handle the exception
+            // If error controller / action is defined, let it handle the exception
             if (!empty($errorControllerName) && !empty($errorActionName))
             {
                 $requestData = array(
