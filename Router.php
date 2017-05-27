@@ -72,34 +72,30 @@ class Router
     {
         $config = Config::getInstance();
 
+        $controllerPrefix = $config->getOption('router/prefix/controller');
+        $actionPrefix = $config->getOption('router/prefix/action');
+
         $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
         $actionSuffix = $config->getOption('router/suffix/action', 'Action');
 
         $controllerName = $request->getControllerName();
-        $action = $request->getActionName();
+        $actionName = $request->getActionName();
 
         // Format controller and action name
-        $controllerClassName = ucfirst(preg_replace_callback('/[-_][a-z]/', function ($matches) {
-                $upper = strtoupper($matches[0]);
-                return $upper[1];
-        }, $controllerName)).$controllerSuffix;
-
-        $actionMethod = preg_replace_callback('/[-_][a-z]/', function ($matches) {
-                $upper = strtoupper($matches[0]);
-                return $upper[1];
-        }, $action).$actionSuffix;
+        $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
+        $actionMethod = Oxygen_Utils::convertUriToAction($actionName, $actionPrefix, $actionSuffix);
 
         // Make the dispatch
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
             $controller = new $controllerClassName(
                 $request,
-                new View($controllerName.DIRECTORY_SEPARATOR.$action)
+                new View($controllerName.DIRECTORY_SEPARATOR.$actionName)
             );
 
             $controller->init();
 
-            if (!empty($action) && (method_exists($controller, $actionMethod) || method_exists($controller, '__call')))
+            if (!empty($actionName) && (method_exists($controller, $actionMethod) || method_exists($controller, '__call')))
                 call_user_func(array($controller, $actionMethod));
             else
                 throw new Router_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');

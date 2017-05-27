@@ -112,6 +112,9 @@ Class Project
             // Before dispatch, call plugin's handler function
             self::callPluginAction('beforeDispatch', array(&$this->request));
 
+            // Load controller class
+            $this->autoloader->loadControllerClass($this->request->getControllerName());
+
             // Make the actual dispatch
             $this->router->dispatch($this->request);
         }
@@ -132,6 +135,8 @@ Class Project
                 $this->request->setParam('exception', $e)->setParam('request', $requestData)
                     ->setControllerName($errorControllerName)
                     ->setActionName($errorActionName);
+
+                $this->autoloader->loadControllerClass($errorControllerName);
 
                 // Before dispatch, call plugin's function
                 self::callPluginAction('beforeDispatch', array(&$this->request));
