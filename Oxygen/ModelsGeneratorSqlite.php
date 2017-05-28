@@ -42,9 +42,9 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
             $tableName = $table['name'];
 
             if (in_array($tableName, array_keys($special_tables)) || substr($tableName, -1) != 's')
-                $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : self::convertToClassName($tableName);
+                $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : Oxygen_Utils::convertToClassName($tableName);
             else
-                $className = substr(self::convertToClassName($tableName), 0, -1);
+                $className = substr(Oxygen_Utils::convertToClassName($tableName), 0, -1);
 
             $name = $tableName;
 
@@ -58,7 +58,7 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 1).'protected $'.self::convertToClassName($field['name'])." = null; \n";
+                $class .= str_repeat(self::INDENTATION, 1).'protected $'.Oxygen_Utils::convertToClassName($field['name'])." = null; \n";
             }
 
             // Constructor
@@ -73,7 +73,7 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['name']).' = $fields[\''.$field['name']."']; \n";
+                $class .= str_repeat(self::INDENTATION, 3).'$this->'.Oxygen_Utils::convertToClassName($field['name']).' = $fields[\''.$field['name']."']; \n";
             }
             $class .= str_repeat(self::INDENTATION, 2)."}\n";
             $class .= str_repeat(self::INDENTATION, 2)."else \n";
@@ -82,7 +82,7 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
             foreach ($fields as $field)
             {
                 $fieldValue = (strpos($field['type'], 'INTEGER') !== false) ? '0' : "''";
-                $class .= str_repeat(self::INDENTATION, 3).'$this->'.self::convertToClassName($field['name'])." = {$fieldValue};\n";
+                $class .= str_repeat(self::INDENTATION, 3).'$this->'.Oxygen_Utils::convertToClassName($field['name'])." = {$fieldValue};\n";
             }
             $class .= str_repeat(self::INDENTATION, 2)."}\n";
 
@@ -120,7 +120,7 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['name']);
+                $camelCaseField = Oxygen_Utils::convertToClassName($field['name']);
 
                 $class .= str_repeat(self::INDENTATION, 2).'$res->bindValue(\':'.$field['name'].'\', $this->'.$camelCaseField.'); '."\n";
             }
@@ -155,7 +155,7 @@ class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
             $class .= str_repeat(self::INDENTATION, 2).'{'."\n";
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['name']);
+                $camelCaseField = Oxygen_Utils::convertToClassName($field['name']);
 
                 $class .= str_repeat(self::INDENTATION, 3).'$this->'.$camelCaseField.' = $row[\''.$field['name'].'\'];'."\n";
             }
@@ -199,7 +199,7 @@ EOM;
             $class .= str_repeat(self::INDENTATION, 1).'// Setters'."\n";
             foreach ($fields as $field)
             {
-                $camelCaseField = self::convertToClassName($field['name']);
+                $camelCaseField = Oxygen_Utils::convertToClassName($field['name']);
 
                 $class .= str_repeat(self::INDENTATION, 1).'function set'.ucfirst($camelCaseField).'($'.$camelCaseField.')'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'{'."\n";
@@ -216,9 +216,9 @@ EOM;
             $class .= str_repeat(self::INDENTATION, 1).'// Getters'."\n";
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 1).'function get'.ucfirst(self::convertToClassName($field['name'])).'()'."\n";
+                $class .= str_repeat(self::INDENTATION, 1).'function get'.ucfirst(Oxygen_Utils::convertToClassName($field['name'])).'()'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'{'."\n";
-                $class .= str_repeat(self::INDENTATION, 2).'return $this->'.self::convertToClassName($field['name']).';'."\n";
+                $class .= str_repeat(self::INDENTATION, 2).'return $this->'.Oxygen_Utils::convertToClassName($field['name']).';'."\n";
                 $class .= str_repeat(self::INDENTATION, 1).'}'."\n";
                 if ($field != $last_field)
                    $class .= "\n";
