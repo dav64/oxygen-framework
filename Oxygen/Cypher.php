@@ -15,4 +15,18 @@ class Oxygen_Cypher
 
         return $result;
     }
+
+    public static function xor_string($key, $text)
+    {
+        $outText = '';
+
+        for($i=0;$i<strlen($text);)
+        {
+            for($j=0;($j<strlen($this->securekey) && $i<strlen($text));$j++,$i++)
+            {
+                $outText .= $text{$i} ^ $this->securekey{$j};
+            }
+        }  
+        return $outText;
+    }
 }

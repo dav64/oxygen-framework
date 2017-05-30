@@ -17,7 +17,7 @@ class Autoloader
 
         foreach ($this->namespaces as $namespace => $namespaceFolder)
         {
-            if (self::startsWith($className, $namespace) && strlen($namespace) > strlen($lastNamespace))
+            if (substr($className, 0, strlen($namespace)) === $namespace && strlen($namespace) > strlen($lastNamespace))
             {
                 $classFile = $namespaceFolder . DIRECTORY_SEPARATOR . substr($className, strlen($namespace)+1) . '.php';
                 $lastNamespace = $namespace;
@@ -61,11 +61,5 @@ class Autoloader
 
         if (!empty ($classFile) && file_exists($classFile))
             require_once $classFile;
-    }
-
-    protected static function startsWith($haystack, $needle)
-    {
-         $length = strlen($needle);
-         return (substr($haystack, 0, $length) === $needle);
     }
 }
