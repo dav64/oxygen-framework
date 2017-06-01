@@ -38,6 +38,11 @@ class Oxygen_Session
         unset($_SESSION[$name]);
     }
 
+    public static function getInstance()
+    {
+        return new self();
+    }
+
     public static function setCookie($name, $value = null, $expire = null)
     {
         setCookie($name, $value, $expire);
