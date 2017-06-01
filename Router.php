@@ -135,7 +135,7 @@ class Router
                 $explodedRoute = explode('/', $routeUrl);
 
                 // Route and URI have different length => it is not this route
-                if (count($explodedRoute) != count($explodedUri))
+                if (count($explodedRoute) != count($explodedUri) && !Oxygen_Utils::startsWith($route['url'], $uri))
                     continue;
 
                 // Consider we have probably found the route

@@ -119,7 +119,7 @@ class Oxygen_Db
             while ($row = $res->fetch())
             {
                 if ($returnObjects)
-                    $result[] = new $class($row);
+                    $result[] = new $class($row['id']);
                 else
                     $result[] = $row;
             }

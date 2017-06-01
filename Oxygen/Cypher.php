@@ -16,17 +16,17 @@ class Oxygen_Cypher
         return $result;
     }
 
-    public static function xor_string($key, $text)
+    public static function xor_string($text, $key)
     {
         $outText = '';
 
         for($i=0;$i<strlen($text);)
         {
-            for($j=0;($j<strlen($this->securekey) && $i<strlen($text));$j++,$i++)
+            for($j=0;($j<strlen($key) && $i<strlen($text));$j++,$i++)
             {
-                $outText .= $text{$i} ^ $this->securekey{$j};
+                $outText .= $text{$i} ^ $key{$j};
             }
-        }  
+        }
         return $outText;
     }
 }

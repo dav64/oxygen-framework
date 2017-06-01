@@ -5,9 +5,10 @@ class Controller
 {
     protected $_request = null;
     protected $_params = array();
+
     protected $view = null;
 
-    public function __construct($request, $view)
+    public function __construct(Request $request, View $view)
     {
         $this->_request = $request;
         $this->view = $view;
