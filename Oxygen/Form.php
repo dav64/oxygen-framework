@@ -43,7 +43,7 @@ class Oxygen_Form
         {
             $result .= ' '.$key.'="'.$value.'"';
         }
-        $result .= '/>';
+        $result .= '>';
         $result .= $defaultValue;
         $result .= '</textarea>';
 
@@ -64,6 +64,9 @@ class Oxygen_Form
         foreach ($options as $option)
         {
             $optionsData .= '<option';
+
+            // TODO: throw exception if $option is not like array('value' => XXX, 'caption' => YYY)
+
             foreach ($option as $key => $value)
             {
                 if ($key == 'caption')
@@ -84,7 +87,7 @@ class Oxygen_Form
         {
             $result .= ' '.$key.'="'.$value.'"';
         }
-        $result .= '/>';
+        $result .= '>';
         $result .= $optionsData;
         $result .= '</select>';
 
@@ -99,7 +102,7 @@ class Oxygen_Form
         {
             $result .= ' '.$key.'="'.$value.'"';
         }
-        $result .= '/>';
+        $result .= '>';
         $result .= $caption;
         $result .= '</button>';
 

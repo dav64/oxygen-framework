@@ -18,9 +18,10 @@ class Oxygen_Db
     public static function getAdapter($adapterName)
     {
         $adaptersList = self::$adaptersList;
+        $result = false;
 
         if (!empty(self::$registeredAdapters[$adapterName]))
-            return self::$registeredAdapters[$adapterName];
+            $result = self::$registeredAdapters[$adapterName];
         else if (isset($adaptersList[$adapterName]))
         {
             try {
@@ -32,17 +33,21 @@ class Oxygen_Db
                 self::$registeredAdapters[$adapterName]->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
                 self::$registeredAdapters[$adapterName]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                return self::$registeredAdapters[$adapterName];
+                $result = self::$registeredAdapters[$adapterName];
             }
             catch (Exception $e)
             {
-                error_log('Cannot open connection to DSN '.$adaptersList[$adapterName]['dsn']);
+                throw new Db_Exception('Cannot open connection to DSN '.$adaptersList[$adapterName]['dsn'] .
+                    ' : ' . $e->getMessage());
             }
         }
         else
-            error_log('Adapter "'.$adapterName.'" not found');
+            throw new Db_Exception('Database adapter "'.$adapterName.'" not found');
 
-        return false;
+        if (!$result || !is_a($result, 'PDO'))
+            throw new Db_Exception('Cannot open connection with database adapter "'.$adapterName.'"');
+
+        return $result;
     }
 
     public static function loadAdapters($adaptersList)

@@ -24,6 +24,11 @@ class Router
 
         $explodedUri = explode('/', $uri);
 
+        // Sort routes by length desc
+        uasort($this->routes, function ($a, $b) {
+            return strlen($b['url']) - strlen($a['url']);
+        });
+
         $routeData = $this->getRouteByUri($uri);
 
         if(!empty($routeData['route']))
@@ -78,8 +83,8 @@ class Router
         $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
         $actionSuffix = $config->getOption('router/suffix/action', 'Action');
 
-        $controllerName = $request->getControllerName();
-        $actionName = $request->getActionName();
+        $controllerName = strtolower($request->getControllerName());
+        $actionName = strtolower($request->getActionName());
 
         // Format controller and action name
         $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
@@ -135,16 +140,16 @@ class Router
                 $explodedRoute = explode('/', $routeUrl);
 
                 // Route and URI have different length => it is not this route
-                if (count($explodedRoute) != count($explodedUri) && !Oxygen_Utils::startsWith($route['url'], $uri))
+                if (count($explodedRoute) < count($explodedUri))
                     continue;
 
                 // Consider we have probably found the route
                 $foundRoute = true;
 
-                foreach ($explodedUri as $i => $part)
+                foreach ($explodedRoute as $i => $part)
                 {
                     $explodedRoutePart = $explodedRoute[$i];
-                    $explodedUriPart = $explodedUri[$i];
+                    $explodedUriPart = isset($explodedUri[$i]) ? $explodedUri[$i] : '';
 
                     if ($explodedRoutePart != $explodedUriPart && $explodedRoutePart[0] != ':')
                     {

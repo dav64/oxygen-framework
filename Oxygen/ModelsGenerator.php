@@ -184,6 +184,16 @@ class Oxygen_ModelsGenerator
 
             // Find function
             $findPrototype = <<<'EOM'
+    /**
+     * Find rows in database according to criterion
+     *
+     * $criterion array : find criterion as array(
+     *      'select' => array('field1', 'field2')
+     *      'where' => array('cond1', 'cond2')
+     *      'other' => array('ORDER BY something')
+     * )
+     * $returnObjects bool : if true, rows will be returned as Model___CLASSNAME__ instances
+     * */
     public static function find($criterion = array(), $returnObjects = false)
     {
         return Oxygen_Db::find(

@@ -170,6 +170,12 @@ class View
         return $this;
     }
 
+    /**
+     * Render a view file using parameters
+     *
+     * $template string : template file
+     * $parameters array : view vars as an array(variable => value)
+     * */
     public function partial($template, array $parameters = array())
     {
         $config = Config::getInstance();
@@ -187,7 +193,13 @@ class View
         return ob_get_clean();
     }
 
-    // Simple Page template parse
+    /**
+     * Simple Page template parse using tags like {BRACKET_TAGS}
+     *
+     * $template string : template file
+     * $parameters array : view vars as an array(variable => value)
+     * $deleteNotFound bool : if true, clear unused tags
+     * */
     public function pparse($template, array $parameters = array(), $deleteNotFound = true)
     {
         array_merge($this->_viewVars, $parameters);
