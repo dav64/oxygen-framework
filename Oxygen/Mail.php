@@ -1,4 +1,6 @@
 <?php
+class Mail_Exception extends Exception { }
+
 class Oxygen_Mail
 {
     CONST PRIORITY_MAXIMAL = 1;
@@ -6,8 +8,6 @@ class Oxygen_Mail
     CONST PRIORITY_NORMAL  = 3;
     CONST PRIORITY_LOWER   = 4;
     CONST PRIORITY_MINIMAL = 5;
-
-    public static $DEFAULT_FROM = '"PostMaster" <postmaster@domain.net>';
 
     public static function sendmail(
         $to,
@@ -19,7 +19,8 @@ class Oxygen_Mail
         $bcc = array(),
         $priority = null,
         $replyto = null,
-        $from = null
+        $from = null,
+        $additionalHeaders = array()
     )
     {
         $headers = array();
@@ -37,6 +38,9 @@ class Oxygen_Mail
         {
             $config = Config::getInstance();
             $from = $config->getOption('mailFrom');
+
+            if(empty($from))
+                throw new Mail_Exception('default from in mail not found, please use config option \'mailFrom\'');
         }
 
         // Setting boundaries limiters
@@ -45,7 +49,10 @@ class Oxygen_Mail
 
         // Headers
         $headers[] = "From: ".$from;
-        $headers[] = "Reply-to: ".$replyto;
+
+        if (!empty($replyto))
+            $headers[] = "Reply-to: ".$replyto;
+
         $headers[] = "MIME-Version: 1.0";
 
         if (!empty($priority))
@@ -53,6 +60,9 @@ class Oxygen_Mail
 
         $mime = empty($attachments) ? 'multipart/alternative' : 'multipart/mixed';
         $headers[] = "Content-Type: $mime;"." boundary=\"$boundary\"";
+
+        if (!empty($additionalHeaders))
+            $headers = array_merge($headers, $additionalHeaders);
 
         // Handling message content
         $content[] = '';
@@ -72,14 +82,11 @@ class Oxygen_Mail
         $content[] = '';
         $content[] = $message;
 
-        /// ----------------------------------
-
-        // adding attachments
+        // Adding attachments
         if (!empty($attachments))
         {
             foreach($attachments as $mimetype => $filepath)
             {
-                // todo: filedata array (mime => filename)
                 $file   = fopen($filepath, "r");
                 $mimetype = (false !== strpos($mimetype, '/')) ? $mimetype : 'application/octet-stream';
 
@@ -90,7 +97,7 @@ class Oxygen_Mail
                 $attachement = @fread($file, filesize($filepath));
                 fclose($file);
 
-                // File empty, dismiss
+                // File empty, dismiss it
                 if (empty($attachement))
                     continue;
 
@@ -113,7 +120,8 @@ class Oxygen_Mail
         $content[] = "--".$boundary."--";
         $content[] = '';
 
-        mail(
+        // Sending the mail
+        return mail(
             $to,
             $subject,
             implode($line_feed, $content),

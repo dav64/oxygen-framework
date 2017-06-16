@@ -10,13 +10,7 @@ class View
 
     CONST RENDER_ALL = 7;
 
-    public static $viewsFolder = '';
-    public static $defaultExt = '';
-
     protected $_content = '';
-
-    protected static $helpers = array();
-    protected static $mainLayout = NULL;
 
     protected $_viewFilename = '';
 
@@ -31,18 +25,16 @@ class View
 
     function __construct($viewFilename = '')
     {
-        $this->_viewFilename = $viewFilename.self::$defaultExt;
+        $this->_viewFilename = $viewFilename;
         ob_start();
-    }
-
-    public static function setHelpers($helpers)
-    {
-        self::$helpers = $helpers;
     }
 
     public function __call($method, $args)
     {
-        $helperClass = isset(self::$helpers[$method]) ? self::$helpers[$method] : null;
+        $config = Config::getInstance();
+        $helpers = $config->getOption('helpers', array());
+
+        $helperClass = isset($helpers[$method]) ? $helpers[$method] : null;
 
         if (!empty($helperClass) && class_exists($helperClass) && is_subclass_of($helperClass, 'Helper'))
         {
@@ -105,11 +97,6 @@ class View
         return isset($this->_enableRender[$type]) ? $this->_enableRender[$type] : null;
     }
 
-    public static function setMainLayout($layoutFile)
-    {
-        self::$mainLayout = $layoutFile;
-    }
-
     public function addLayout($layoutFile)
     {
         array_push($this->_layout, $layoutFile);
@@ -122,6 +109,8 @@ class View
 
     public function render()
     {
+        $config = Config::getInstance();
+
         // Append any response done before render
         $ob_render = $this->_content = ob_get_clean();
         ob_start();
@@ -143,8 +132,11 @@ class View
                 }
             }
 
-            if (!empty(self::$mainLayout) && $this->canRender(self::RENDER_MAIN_LAYOUT))
-                $this->_content = $this->partial(self::$mainLayout, array('content' => $this->_content));
+            if ($this->canRender(self::RENDER_MAIN_LAYOUT))
+            {
+                $mainLayout = $config->getOption('view/mainLayout');
+                $this->_content = $this->partial($mainLayout, array('content' => $this->_content));
+            }
 
             Project::callPluginAction('beforeRender', array(&$this));
 
@@ -179,10 +171,13 @@ class View
     public function partial($template, array $parameters = array())
     {
         $config = Config::getInstance();
+        $project = Project::getInstance();
+
+        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder', '/Views');
 
         $this->_viewVars = array_merge($this->_viewVars, $parameters);
 
-        $viewFilename = self::$viewsFolder . DIRECTORY_SEPARATOR . $template;
+        $viewFilename = $viewsFolder . DIRECTORY_SEPARATOR . $template;
 
         if (!is_readable($viewFilename))
             throw new View_Exception('Partial file "'.$viewFilename.'" cannot be found');
@@ -202,9 +197,14 @@ class View
      * */
     public function pparse($template, array $parameters = array(), $deleteNotFound = true)
     {
+        $config = Config::getInstance();
+        $project = Project::getInstance();
+
+        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder', '/Views');
+
         array_merge($this->_viewVars, $parameters);
 
-        $viewFilename = self::$viewsFolder . DIRECTORY_SEPARATOR . $template;
+        $viewFilename = $viewsFolder . DIRECTORY_SEPARATOR . $template;
 
         if (!is_readable($viewFilename))
             throw new View_Exception('Parsed view "'.$viewFilename.'" cannot be found');

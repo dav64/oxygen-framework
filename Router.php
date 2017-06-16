@@ -90,12 +90,14 @@ class Router
         $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
         $actionMethod = Oxygen_Utils::convertUriToAction($actionName, $actionPrefix, $actionSuffix);
 
+        $viewExtension = $config->getOption('view/extension');
+
         // Make the dispatch
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
             $controller = new $controllerClassName(
                 $request,
-                new View($controllerName.DIRECTORY_SEPARATOR.$actionName)
+                new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension)
             );
 
             $controller->init();
@@ -108,7 +110,7 @@ class Router
             $controller->getView()->render();
         }
         else
-            throw new Router_Exception('Controller "' . $controllerClassName . '" not exists or is not a controller');
+            throw new Router_Exception('Controller class "' . $controllerClassName . '" not exists or is not a controller');
     }
 
     public function addRoute($name, $routeData)

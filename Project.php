@@ -15,19 +15,18 @@ class Project_Exception extends Exception { }
 Class Project
 {
     private static $instance = null;
-    private static $config = null;
 
-    private $autoloader;
-    private $router;
+    private $_appFolder;
 
-    private $request;
+    private $_autoloader;
+    private $_router;
 
     public static function create($app_folder, $projectOptions = array())
     {
         if (self::$instance == null)
             self::$instance = new Project($app_folder, $projectOptions);
         else
-            throw new Project_Exception('Project already initalized, use getInstance() Instead');
+            throw new Project_Exception('Project already initalized, use Project::getInstance() instead');
 
         return self::$instance;
     }
@@ -35,29 +34,26 @@ Class Project
     public static function getInstance()
     {
         if (self::$instance == null)
-            throw new Project_Exception('Project not initalieed');
+            throw new Project_Exception('Project not initialized');
 
         return self::$instance;
     }
 
     private function __construct($app_folder, $projectOptions)
     {
-        self::$config = Config::getInstance();
-        self::$config->loadConfig($projectOptions);
+        $config = Config::getInstance();
+        $config->loadConfig($projectOptions);
 
-        View::$viewsFolder = $app_folder . self::$config->getOption('view/folder', '/Views');
-        View::$defaultExt = self::$config->getOption('view/extension', '.phtml');
+        $this->_appFolder = $app_folder;
 
-        View::setHelpers(self::$config->getOption('helpers', array()));
-        View::setMainLayout(self::$config->getOption('view/mainLayout'));
-
-        $this->autoloader = new Autoloader($app_folder);
-        $this->router = new Router();
+        $this->_autoloader = new Autoloader($app_folder);
+        $this->_router = new Router();
     }
 
     public static function callPluginAction($action, $params)
     {
-        $pluginClass = self::$config->getOption('pluginsClass', 'Plugins');
+        $config = Config::getInstance();
+        $pluginClass = $config->getOption('pluginsClass', 'Plugins');
 
         $params = is_array($params) ? $params : array($params);
         if (class_exists($pluginClass))
@@ -80,68 +76,78 @@ Class Project
 
     public function addClassType($type, $folder)
     {
-        $this->autoloader->addClassType($type, $folder);
+        $this->_autoloader->addClassType($type, $folder);
     }
 
     public function addRoute($name, $options)
     {
-        $this->router->addRoute($name, $options);
+        $this->_router->addRoute($name, $options);
     }
 
     public function getUrlByRoute($routeName, $params)
     {
-        return $this->router->getUrlByRoute($routeName, $params);
+        return $this->_router->getUrlByRoute($routeName, $params);
+    }
+
+    public function getAppFolder()
+    {
+        return $this->_appFolder;
     }
 
     public function registerAutoloader()
     {
-        $this->addClassType('Oxygen', __DIR__ . '/Oxygen');
+        $config = Config::getInstance();
 
-        $this->autoloader->register();
+        $this->addClassType('Oxygen', __DIR__ . '/Oxygen');
+        $this->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder', '/Helpers'));
+
+        $this->_autoloader->register();
         return $this;
     }
 
     public function run()
     {
-        $this->request = new Request();
+        $config = Config::getInstance();
 
-        $this->router->route($this->request);
+        $request = new Request();
+
+        $this->_router->route($request);
 
         try
         {
             // Before dispatch, call plugin's handler function
-            self::callPluginAction('beforeDispatch', array(&$this->request));
+            self::callPluginAction('beforeDispatch', array(&$request));
 
             // Load controller class
-            $this->autoloader->loadControllerClass($this->request->getControllerName());
+            $this->_autoloader->loadControllerClass($request->getControllerName());
 
             // Make the actual dispatch
-            $this->router->dispatch($this->request);
+            $this->_router->dispatch($request);
         }
         catch (Exception $e)
         {
-            $errorControllerName = self::$config->getOption('router/error/controller');
-            $errorActionName = self::$config->getOption('router/error/action');
+            $errorControllerName = $config->getOption('router/error/controller');
+            $errorActionName = $config->getOption('router/error/action');
 
             // If error controller / action is defined, let it handle the exception
             if (!empty($errorControllerName) && !empty($errorActionName))
             {
                 $requestData = array(
-                    'controllerName' => $this->request->getControllerName(),
-                    'actionName' => $this->request->getActionName(),
-                    'params' => $this->request->getAllParams()
+                    'controllerName' => $request->getControllerName(),
+                    'actionName' => $request->getActionName(),
+                    'params' => $request->getAllParams()
                 );
 
-                $this->request->setParam('exception', $e)->setParam('request', $requestData)
+                $request->setParam('exception', $e)->setParam('request', $requestData)
                     ->setControllerName($errorControllerName)
                     ->setActionName($errorActionName);
 
-                $this->autoloader->loadControllerClass($errorControllerName);
+                $this->_autoloader->loadControllerClass($errorControllerName);
 
                 // Before dispatch, call plugin's function
-                self::callPluginAction('beforeDispatch', array(&$this->request));
+                self::callPluginAction('beforeDispatch', array(&$request));
 
-                $this->router->dispatch($this->request);
+                $this->_router->dispatch($request);
             }
             else
                 throw $e;
