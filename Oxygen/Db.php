@@ -75,6 +75,7 @@ class Oxygen_Db
         {
             $select = '';
             $from = '';
+            $join = '';
             $where = '';
             $other = '';
 
@@ -87,6 +88,32 @@ class Oxygen_Db
             $select = is_array($criterion['select']) ? implode(',', $criterion['select']) : $criterion['select'];
             $from = is_array($criterion['from']) ? implode(',', $criterion['from']) : $criterion['from'];
 
+            if (!empty($criterion['join']))
+            {
+                $joinQuery = $criterion['join'];
+
+                if (is_string($joinQuery))
+                    $join = $joinQuery;
+                elseif (is_array($joinQuery))
+                {
+                    foreach ($joinQuery as $joinData)
+                    {
+                        // Do inner join if no type specified
+                        $joinType = isset($joinData['type']) ? $joinData['type'] : 'INNER';
+
+                        // We do a full cross join if no condition specified
+                        $joinOn = isset($joinData['on']) ? $joinData['on'] : '1=1';
+
+                        if (!isset($joinData['table']))
+                            throw new Db_Exception('Cannot join without secondary table');
+                        else
+                            $joinTable = $joinData['table'];
+
+                        $join .= $joinType.' JOIN '.$joinTable.' ON '.$joinOn.' ';
+                    }
+                }
+            }
+
             if (!empty($criterion['where']))
                 $where = 'WHERE ('. (is_array($criterion['where']) ? implode(') AND (', $criterion['where']) : $criterion['where']). ')';
 
@@ -96,26 +123,28 @@ class Oxygen_Db
 
             $query = 'SELECT '.$select.'
                       FROM '.$from.'
+                      '.$join.'
                       '.$where.'
                       '.$other;
 
-            $res = $db->prepare($query);
-
-            if (!empty($criterion['bind']))
-            {
-                foreach ($criterion['bind'] as $param => $value)
-                {
-                    $res->bindValue($param, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
-                }
-            }
-
             try
             {
+                $res = $db->prepare($query);
+
+                if (!empty($criterion['bind']))
+                {
+                    foreach ($criterion['bind'] as $param => $value)
+                    {
+                        $res->bindValue($param, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+                    }
+                }
+
                 $res->execute();
             }
             catch (Exception $e)
             {
-                $queryInfo = "\n" . (!empty($criterion['bind']) ? "Prepared query was: " : 'Query was: ');
+                // Append query to the exception
+                $queryInfo = "\n" . (!empty($criterion['bind']) ? "Prepared query" : 'Query').' was: ';
                 $queryInfo .= $query;
 
                 throw new Db_Exception($e->getMessage().$queryInfo);
