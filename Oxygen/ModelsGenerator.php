@@ -62,7 +62,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field)
             {
-                $class .= str_repeat(self::INDENTATION, 1).'protected $'.Oxygen_Utils::convertToClassName($field['Field'])." = null; \n";
+                $class .= str_repeat(self::INDENTATION, 1).'protected $'.Oxygen_Utils::convertToClassName($field['Field'])." = null;\n";
             }
 
             // Constructor
@@ -78,7 +78,7 @@ class Oxygen_ModelsGenerator
             foreach ($fields as $field)
             {
                 $class .= str_repeat(self::INDENTATION, 3).'$this->'.Oxygen_Utils::convertToClassName($field['Field']).
-                    ' = isset($fields[\''.$field['Field'].'\']) ? $fields[\''.$field['Field'].'\'] : null; '."\n";
+                    ' = isset($fields[\''.$field['Field'].'\']) ? $fields[\''.$field['Field'].'\'] : null;'."\n";
             }
             $class .= str_repeat(self::INDENTATION, 2)."}\n";
             $class .= str_repeat(self::INDENTATION, 2)."else \n";
