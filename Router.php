@@ -148,6 +148,8 @@ class Router
                 // Consider we have probably found the route
                 $foundRoute = true;
 
+                $params = isset($route['values']) ? $route['values'] : array();
+
                 foreach ($explodedRoute as $i => $part)
                 {
                     $explodedRoutePart = $explodedRoute[$i];
