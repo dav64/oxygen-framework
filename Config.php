@@ -46,4 +46,16 @@ class Config
 
         return $result;
     }
+
+    public function setOption($name, $value)
+    {
+        $path = explode(self::CONFIG_NODES_SEPARATOR, $name);
+
+        $temp = &$this->_options;
+        foreach($path as $key) {
+            $temp = &$temp[$key];
+        }
+        $temp = $value;
+        unset($temp);
+    }
 }

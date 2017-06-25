@@ -28,15 +28,15 @@ class Oxygen_Mail
 
         $line_feed = "\r\n";
 
+        $config = Config::getInstance();
+
+        $subject = $config->getOption('mailPrepend').$subject;
+
         if (empty($replyto))
-        {
-            $config = Config::getInstance();
-            $replyto = $config->getOption('mailFrom');
-        }
+            $replyto = $config->getOption('mailReplyTo');
 
         if (empty($from))
         {
-            $config = Config::getInstance();
             $from = $config->getOption('mailFrom');
 
             if(empty($from))
