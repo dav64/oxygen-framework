@@ -10,9 +10,6 @@ class Router
     {
         $config = Config::getInstance();
 
-        $defaultController = $config->getOption('router/default/controller', 'index');
-        $defaultAction = $config->getOption('router/default/action', 'index');
-
         $controllerName = null;
         $actionName = null;
 
@@ -41,24 +38,30 @@ class Router
         }
         else if(!empty($explodedUri[0]))
         {
-            // Handle requests like '/controller-name/action-name'
+            // Handle requests like '/controller-name/action-name/param1/param2'
             $controllerName = strtolower($explodedUri[0]);
 
             // get action name
             if (!empty($explodedUri[1]))
+            {
                 $action = strtolower($explodedUri[1]);
+
+                // if there are param, we save them in the request
+                if (count($explodedUri) > 2 )
+                    $request->setAllParams(array_slice($explodedUri, 2));
+            }
             else
-                $action = $defaultAction;
+                $action = $config->getOption('router/default/action', 'index');
         }
         else
         {
-            // We are requesting the root page
-            $controllerName = $defaultController;
-            $action = $defaultAction;
+            // We are requesting the home page
+            $controllerName = $config->getOption('router/default/controller', 'index');
+            $action = $config->getOption('router/default/action', 'index');
         }
 
         // Convert get parameters to request parameters
-        if (!empty($request_uri[1]))
+        if ($config->getOption('router/getAsParams', true) && !empty($request_uri[1]))
         {
             $params = array();
             parse_str($request_uri[1], $params);
