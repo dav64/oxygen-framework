@@ -2,6 +2,7 @@
 
 // TODO: general functionsin ModelGenerator : getTables, getFieldsList (return array of field => type),
 // that other subclasses can extend to adapt to all DB types
+// + class-prefix / suffix (generateModels parameters ?)
 
 class Oxygen_ModelsGeneratorSqlite extends Oxygen_ModelsGenerator
 {

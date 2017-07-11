@@ -135,7 +135,9 @@ class View
             if ($this->canRender(self::RENDER_MAIN_LAYOUT))
             {
                 $mainLayout = $config->getOption('view/mainLayout');
-                $this->_content = $this->partial($mainLayout, array('content' => $this->_content));
+
+                if ($mainLayout)
+                    $this->_content = $this->partial($mainLayout, array('content' => $this->_content));
             }
 
             Project::callPluginAction('beforeRender', array(&$this));
@@ -217,7 +219,7 @@ class View
         }
 
         if ($deleteNotFound)
-            $contents = preg_replace('/{\w+}/', '', $contents); // My first written RegExp ^^
+            $contents = preg_replace('/{\w+}/', '', $contents);
 
         return $contents;
     }
