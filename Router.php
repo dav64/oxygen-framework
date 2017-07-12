@@ -46,7 +46,7 @@ class Router
             {
                 $action = strtolower($explodedUri[1]);
 
-                // if there are param, we save them in the request
+                // if there are any params, we save them in the request
                 if (count($explodedUri) > 2 )
                     $request->setAllParams(array_slice($explodedUri, 2));
             }
@@ -93,7 +93,7 @@ class Router
         $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
         $actionMethod = Oxygen_Utils::convertUriToAction($actionName, $actionPrefix, $actionSuffix);
 
-        $viewExtension = $config->getOption('view/extension');
+        $viewExtension = $config->getOption('view/extension', '.phtml');
 
         // Make the dispatch
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
