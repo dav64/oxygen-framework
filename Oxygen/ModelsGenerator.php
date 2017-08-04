@@ -11,6 +11,7 @@ class Oxygen_ModelsGenerator
         );
     */
 
+    // TODO: set parameters as array ? (Not bother with optional parameters order)
     public static function generateModels(
         $classPath,
         $generatedClassPath,

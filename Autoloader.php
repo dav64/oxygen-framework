@@ -6,7 +6,7 @@ class Autoloader
 
     // Autoloader
     // Class: Namespace_Class_Name => Namespace/ClassName
-    function autoload($className)
+    public function autoload($className)
     {
         $classFile = null;
         $baseFolder = $this->appFolder;
@@ -28,17 +28,17 @@ class Autoloader
             require_once $classFile;
     }
 
-    function __construct($rootDir)
+    public function __construct($rootDir)
     {
         $this->appFolder = $rootDir;
     }
 
-    function addClassType($type, $folder)
+    public function addClassType($type, $folder)
     {
         $this->namespaces[$type] = $folder;
     }
 
-    function register()
+    public function register()
     {
         spl_autoload_register(array($this, 'autoload'));
     }

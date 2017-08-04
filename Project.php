@@ -69,14 +69,7 @@ Class Project
                 throw new Plugin_Exception('Plugins class "' . $pluginClass . '" doesn\'t extend "Plugin" class');
         }
         else
-        {
             throw new Plugin_Exception('Plugin class "' . $pluginClass . '" Not found');
-        }
-    }
-
-    public function addClassType($type, $folder)
-    {
-        $this->_autoloader->addClassType($type, $folder);
     }
 
     public function addRoute($name, $options)
@@ -98,8 +91,19 @@ Class Project
     {
         $config = Config::getInstance();
 
-        $this->addClassType('Oxygen', __DIR__ . '/Oxygen');
-        $this->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder', '/Helpers'));
+        $this->_autoloader->addClassType('Oxygen', __DIR__ . '/Oxygen');
+        $this->_autoloader->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder', '/Helpers'));
+
+        // Register configured namespaces
+        if (!empty($config->getOption('namespaces')))
+        {
+            $classtypes = $config->getOption('namespaces');
+
+            foreach ($classtypes as $prefix => $folder)
+            {
+                $this->_autoloader->addClassType($prefix, $this->_appFolder . $folder);
+            }
+        }
 
         $this->_autoloader->register();
         return $this;
