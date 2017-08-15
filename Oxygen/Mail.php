@@ -40,7 +40,7 @@ class Oxygen_Mail
             $from = $config->getOption('mailFrom');
 
             if(empty($from))
-                throw new Mail_Exception('default from in mail not found, please use config option \'mailFrom\'');
+                throw new Mail_Exception('default \'from\' mail adress not found and none provided, please use config option \'mailFrom\'');
         }
 
         // Setting boundaries limiters
