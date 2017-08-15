@@ -23,7 +23,7 @@ class Router
 
         // Sort routes by length desc
         uasort($this->routes, function ($a, $b) {
-            return strlen($b['url']) - strlen($a['url']);
+            return strcmp($b['url'], $a['url']) ;
         });
 
         $routeData = $this->getRouteByUri($uri);
