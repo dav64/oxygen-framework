@@ -7,14 +7,23 @@ class Oxygen_Db
     private static $registeredAdapters = array();
     private static $adaptersList = array();
 
+    /**
+     * Get the DB adapter named 'default'
+     * 
+     * @return boolean|mixed
+     */
     public static function getDefaultAdapter()
     {
         return self::getAdapter('default');
     }
 
     /**
-     * get a PDO db adapter by name
-     * */
+     * Get a PDO db adapter by name
+     * 
+     * @param unknown $adapterName
+     * @throws Db_Exception
+     * @return boolean|mixed
+     */
     public static function getAdapter($adapterName)
     {
         $adaptersList = self::$adaptersList;
@@ -50,6 +59,11 @@ class Oxygen_Db
         return $result;
     }
 
+    /**
+     * Register DB adapters
+     * 
+     * @param array $adaptersList
+     */
     public static function loadAdapters($adaptersList)
     {
         self::$adaptersList = $adaptersList;
@@ -66,6 +80,9 @@ class Oxygen_Db
      *      'where' => array('cond1', 'cond2')
      *      'other' => array('ORDER BY something')
      * )
+     * 
+     * @throws Db_Exception
+     * @return mixed
      * */
     public static function find($db, $table, $class, $criterion = array(), $returnObjects = false)
     {

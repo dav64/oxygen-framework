@@ -26,7 +26,7 @@ class Oxygen_Mail
         $headers = array();
         $content = array();
 
-        $line_feed = "\r\n";
+        $line_feed = "\n";
 
         $config = Config::getInstance();
 

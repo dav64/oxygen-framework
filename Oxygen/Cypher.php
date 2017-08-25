@@ -1,6 +1,15 @@
 <?php
 class Oxygen_Cypher
 {
+	/**
+	 * hash a password for a provided username
+	 * 
+	 * @param string $username
+	 * @param string $password
+	 * @param string $algo
+	 * @param array $options
+	 * @return string 
+	 */
     public static function hash_password($username, $password, $algo = '', $options = array())
     {
         $password = substr($password, 0 , 100); // Truncate passwords longer than 100 chars
@@ -19,6 +28,13 @@ class Oxygen_Cypher
         return $result;
     }
 
+    /**
+     * XOR the provided string with the key 
+     * 
+     * @param string $text the text to encrypt
+     * @param string $key the cypher key
+     * @return string|boolean
+     */
     public static function xor_string($text, $key)
     {
         $outText = '';
