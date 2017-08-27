@@ -1,11 +1,27 @@
 <?php
 class Router_Exception extends Exception {}
-
+/**
+ * Handle request URI and call associated controller / action
+ *
+ * URIs can use one of the following forms:
+ * - / => We are requesting the default controller/action (index page)
+ * - /foo => we are requesting the controller named 'foo' and default action
+ * - /foo/bar => same as above but requesting also the action named 'bar'
+ * - /foo/bar/ga/bu/zo/meu => same as above, except that everything after bar/ will be stored as request parameters
+ *      e.g. 'ga' will be parameter 0, 'bu' will be parameter 1, and so on
+ * - /my/:custom/uri => custom route with a parameter named 'custom'
+ *
+ */
 class Router
 {
     protected $routes = array();
-    protected $regexRoutes = array();
 
+    /**
+     * Populate $request with controller and action names
+     *
+     * @param Request $request
+     *      The request to compute controller and action
+     */
     public function route(&$request)
     {
         $config = Config::getInstance();
@@ -76,6 +92,18 @@ class Router
         $request->setActionName($action);
     }
 
+    /**
+     * Dispatch the request (call the controller/action provided by the it)
+     *
+     * Handles the controller class according to it's folder / prefix / suffix (assume the controller file is loaded)
+     * Then call the init() controller's method then call the action's method in controller
+     * Finally, renders the controller's view.
+     *
+     * @param Request $request
+     *      The request to dispatch
+     * @throws Router_Exception
+     *      If the controller / action could not be loaded
+     */
     public function dispatch($request)
     {
         $config = Config::getInstance();
@@ -116,6 +144,25 @@ class Router
             throw new Router_Exception('Controller class "' . $controllerClassName . '" not exists or is not a controller');
     }
 
+    /**
+     * Add a route to custom routes lists
+     *
+     * @param string $name
+     *      Route unique identifier
+     * @param array $routeData
+     *      An array containing route data as following :
+     *      array(
+     *          'controller' => 'foo',
+     *          'action' => 'bar',
+     *          'url' => '/my/own/url/:foo',
+     *          'values' => array(
+     *              'foo' => 'something' // 'something' is the default 'foo' parameter's value
+     *          )
+     *      )
+     *
+     * @throws Router_Exception
+     *      If one of mandatory fields (controller/action/url) isn't set
+     */
     public function addRoute($name, $routeData)
     {
         if (isset($this->routes[$name]))
@@ -126,6 +173,16 @@ class Router
             $this->routes[$name] = $routeData;
     }
 
+    /**
+     * Find a route according to the passed URI (and populate parameters if any)
+     *
+     * @param unknown $uri
+     * @return Array
+     *      array(
+     *       'route' => The route array ['controller' => ..., 'action' => ..., ]
+     *       'params' => The parameter values found (if any)
+     *   )
+     */
     protected function getRouteByUri($uri)
     {
         $result = false;
@@ -169,7 +226,7 @@ class Router
                     {
                         $paramName = substr($explodedRoutePart, 1);
 
-                        // fill parameter with (in order of presence) : provided value, default or null
+                        // Fill parameter with (in order of presence) : provided value, default or null
                         $params[$paramName] = !empty($explodedUriPart)
                             ? $explodedUriPart
                             : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
@@ -192,6 +249,16 @@ class Router
         );
     }
 
+    /**
+     * Compute an URI from route name and parameters
+     *
+     * @param string $routeName
+     *      Name of the route to compute an URI
+     * @param Array $params
+     *      Parameters list
+     * @return string
+     *      The final URI
+     */
     public function getUrlByRoute($routeName, $params)
     {
         $result = '';

@@ -191,7 +191,10 @@ class View
     }
 
     /**
-     * Simple Page template parse using tags like {BRACKET_TAGS}
+     * Simple page template parse using tags like {BRACKET_TAGS} 
+     * that will be replaced by their values 
+     * Perfect fit as final users' templates 
+     * (because it doesn't require any PHP knowledge)
      *
      * $template string : template file
      * $parameters array : view vars as an array(variable => value)

@@ -27,7 +27,8 @@ Class Project
     /**
      * Instanciate a MVC project
      *
-     * @param string $app_folder Where are all application files (Controllers / Models / Views)
+     * @param string $app_folder
+     *      Foder where are all application files (Controllers / Models / Views)
      * @param array $projectOptions
      * @throws Project_Exception
      * @return Project
@@ -64,7 +65,8 @@ Class Project
     /**
      * Call a specific action plugin event
      *
-     * @param string $action the method to call
+     * @param string $action
+     *      The plugin method to call
      * @param array $params
      * @throws Plugin_Exception
      */
@@ -90,11 +92,26 @@ Class Project
             throw new Plugin_Exception('Plugin class "' . $pluginClass . '" Not found');
     }
 
+    /**
+     * Add a route to the router
+     * @see Router::addRoute()
+     *
+     * @param string $name
+     * @param array $options
+     */
     public function addRoute($name, $options)
     {
         $this->_router->addRoute($name, $options);
     }
 
+    /**
+     * Get URI by route and parameters
+     * @see Router::getUrlByRoute()
+     *
+     * @param string $routeName
+     * @param array $params
+     * @return string
+     */
     public function getUrlByRoute($routeName, $params)
     {
         return $this->_router->getUrlByRoute($routeName, $params);
@@ -106,7 +123,9 @@ Class Project
     }
 
     /**
-     * Run the Autoloader
+     * Add our own __autoload implementation
+     *
+     * Register our autoloader and some namespaces (Oxygen + Helper + those registered in configuration)
      *
      * @return Project
      */
@@ -114,6 +133,7 @@ Class Project
     {
         $config = Config::getInstance();
 
+        // Register our namespaces
         $this->_autoloader->addClassType('Oxygen', __DIR__ . '/Oxygen');
         $this->_autoloader->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder', '/Helpers'));
 
@@ -128,10 +148,17 @@ Class Project
             }
         }
 
+        // aka spl_autoload_register
         $this->_autoloader->register();
+
         return $this;
     }
 
+    /**
+     * Main project function
+     *
+     * @throws Exception
+     */
     public function run()
     {
         $config = Config::getInstance();
@@ -142,7 +169,7 @@ Class Project
 
         try
         {
-            // Before dispatch, call plugin's handler function
+            // Before dispatch, call plugin's 'beforeDispatch' handler
             self::callPluginAction('beforeDispatch', array(&$request));
 
             // Load controller class
@@ -156,28 +183,31 @@ Class Project
             $errorControllerName = $config->getOption('router/error/controller');
             $errorActionName = $config->getOption('router/error/action');
 
-            // If error controller / action is defined, let it handle the exception
+            // If error controller / action are defined, let it handle the exception
             if (!empty($errorControllerName) && !empty($errorActionName))
             {
+                // Save old request route
                 $requestData = array(
                     'controllerName' => $request->getControllerName(),
                     'actionName' => $request->getActionName(),
                     'params' => $request->getAllParams()
                 );
 
+                // Store the exception data in the request and go to the error handler
                 $request->setParam('exception', $e)->setParam('request', $requestData)
                     ->setControllerName($errorControllerName)
                     ->setActionName($errorActionName);
 
+                // Load the error handler controller file
                 $this->_autoloader->loadControllerClass($errorControllerName);
 
-                // Before dispatch, call plugin's function
+                // Call plugin's 'beforeDispatch' handler before dispatching the error controller
                 self::callPluginAction('beforeDispatch', array(&$request));
 
                 $this->_router->dispatch($request);
             }
             else
-                throw $e;
+                throw $e; // No error handler found, so just throw the exception
         }
     }
 }
