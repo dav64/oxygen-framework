@@ -95,7 +95,7 @@ class Router
     /**
      * Dispatch the request (call the controller/action provided by the it)
      *
-     * Handles the controller class according to it's folder / prefix / suffix (assume the controller file is loaded)
+     * Handles the controller class according to it's prefix / suffix (assumes the controller file is loaded)
      * Then call the init() controller's method then call the action's method in controller
      * Finally, renders the controller's view.
      *
