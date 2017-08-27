@@ -11,7 +11,10 @@ require __DIR__ . '/Request.php';
 class Plugin_Exception extends Exception { }
 class Project_Exception extends Exception { }
 
-// Main application handler
+/**
+ * Main application handler
+ *
+ */
 Class Project
 {
     private static $instance = null;
@@ -21,6 +24,14 @@ Class Project
     private $_autoloader;
     private $_router;
 
+    /**
+     * Instanciate a MVC project
+     *
+     * @param string $app_folder Where are all application files (Controllers / Models / Views)
+     * @param array $projectOptions
+     * @throws Project_Exception
+     * @return Project
+     */
     public static function create($app_folder, $projectOptions = array())
     {
         if (self::$instance == null)
@@ -50,6 +61,13 @@ Class Project
         $this->_router = new Router();
     }
 
+    /**
+     * Call a specific action plugin event
+     *
+     * @param string $action the method to call
+     * @param array $params
+     * @throws Plugin_Exception
+     */
     public static function callPluginAction($action, $params)
     {
         $config = Config::getInstance();
@@ -87,6 +105,11 @@ Class Project
         return $this->_appFolder;
     }
 
+    /**
+     * Run the Autoloader
+     *
+     * @return Project
+     */
     public function registerAutoloader()
     {
         $config = Config::getInstance();

@@ -1,4 +1,9 @@
 <?php
+
+/**
+ * Abstract class for view helper
+ *
+ */
 class Helper
 {
     protected $view;

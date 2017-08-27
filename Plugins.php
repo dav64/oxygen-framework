@@ -1,4 +1,8 @@
 <?php
+/**
+ * Base class for Plugins handler
+ *
+ */
 Class Plugins
 {
     function beforeDispatch(Request &$request) {}
