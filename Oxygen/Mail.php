@@ -20,7 +20,8 @@ class Oxygen_Mail
         $priority = null,
         $replyto = null,
         $from = null,
-        $additionalHeaders = array()
+        $additionalHeaders = array(),
+        $charset = 'utf-8'
     )
     {
         $headers = array();
@@ -70,12 +71,12 @@ class Oxygen_Mail
 
         if ($isHTML)
         {
-            $content[] = "Content-Type: text/html; charset=\"ISO-8859-1\"";
+            $content[] = "Content-Type: text/html; charset=\"$charset\"";
             $content[] = "Content-Transfer-Encoding: 8bit";
         }
         else
         {
-            $content[] = "Content-Type: text/plain; charset=\"ISO-8859-1\"";
+            $content[] = "Content-Type: text/plain; charset=\"$charset\"";
             $content[] = "Content-Transfer-Encoding: 8bit";
         }
 
