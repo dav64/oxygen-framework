@@ -28,7 +28,7 @@ Class Project
      * Instanciate a MVC project
      *
      * @param string $app_folder
-     *      Foder where are all application files (Controllers / Models / Views)
+     *      Folder where are all application files (Controllers / Models / Views)
      * @param array $projectOptions
      * @throws Project_Exception
      * @return Project
@@ -198,12 +198,13 @@ Class Project
                     ->setControllerName($errorControllerName)
                     ->setActionName($errorActionName);
 
-                // Load the error handler controller file
-                $this->_autoloader->loadControllerClass($errorControllerName);
-
                 // Call plugin's 'beforeDispatch' handler before dispatching the error controller
                 self::callPluginAction('beforeDispatch', array(&$request));
 
+                // Load the error handler controller file
+                $this->_autoloader->loadControllerClass($request->getControllerName());
+
+                // Make the actual dispatch
                 $this->_router->dispatch($request);
             }
             else
