@@ -60,6 +60,9 @@ Class Project
 
         $this->_autoloader = new Autoloader($app_folder);
         $this->_router = new Router();
+
+        // We can use custom autoloaded classes
+        $this->registerAutoloader();
     }
 
     /**
@@ -93,18 +96,6 @@ Class Project
     }
 
     /**
-     * Add a route to the router
-     * @see Router::addRoute()
-     *
-     * @param string $name
-     * @param array $options
-     */
-    public function addRoute($name, $options)
-    {
-        $this->_router->addRoute($name, $options);
-    }
-
-    /**
      * Get URI by route and parameters
      * @see Router::getUrlByRoute()
      *
@@ -129,7 +120,7 @@ Class Project
      *
      * @return Project
      */
-    public function registerAutoloader()
+    protected function registerAutoloader()
     {
         $config = Config::getInstance();
 
@@ -161,7 +152,8 @@ Class Project
      */
     public function run()
     {
-        $config = Config::getInstance();
+        // Let the user play with the router before the actual run
+        self::callPluginAction('beforeBootstrap', array(&$this->_router));
 
         $request = new Request();
 
@@ -180,6 +172,8 @@ Class Project
         }
         catch (Exception $e)
         {
+            $config = Config::getInstance();
+
             $errorControllerName = $config->getOption('router/error/controller');
             $errorActionName = $config->getOption('router/error/action');
 
