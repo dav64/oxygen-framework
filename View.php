@@ -111,10 +111,10 @@ class View
     {
         $config = Config::getInstance();
 
-        // Append any response done before render
-        $ob_render = $this->_content = ob_get_clean();
-        ob_start();
+        // Save any output done before render to append it after partial rendering
+        $ob_render = ob_get_clean();
 
+        ob_start();
         try
         {
             Project::callPluginAction('beforeAddingLayout', array(&$this));
@@ -122,13 +122,15 @@ class View
             if ($this->canRender(self::RENDER_PARTIAL))
             {
                 if (!empty($this->_viewFilename))
-                    $this->_content = $this->partial($this->_viewFilename).$ob_render;
+                    $this->_content = $this->partial($this->_viewFilename);
             }
+
+            $this->_content .= $ob_render;
 
             if ($this->canRender(self::RENDER_LAYOUTS))
             {
                 foreach ($this->_layout as $layoutFile) {
-                    $this->_content = $this->partial($layoutFile, array('content' => $this->_content));
+                    $this->_content = $this->partial($layoutFile, array('_content' => $this->_content));
                 }
             }
 
@@ -137,11 +139,10 @@ class View
                 $mainLayout = $config->getOption('view/mainLayout');
 
                 if ($mainLayout)
-                    $this->_content = $this->partial($mainLayout, array('content' => $this->_content));
+                    $this->_content = $this->partial($mainLayout, array('_content' => $this->_content));
             }
 
             Project::callPluginAction('beforeRender', array(&$this));
-
         }
         catch (Exception $e)
         {
@@ -191,9 +192,9 @@ class View
     }
 
     /**
-     * Simple page template parse using tags like {BRACKET_TAGS} 
-     * that will be replaced by their values 
-     * Perfect fit as final users' templates 
+     * Simple page template parse using tags like {BRACKET_TAGS}
+     * that will be replaced by their values
+     * Perfect fit as final users' templates
      * (because it doesn't require any PHP knowledge)
      *
      * $template string : template file
@@ -218,7 +219,7 @@ class View
 
         foreach($parameters as $parameter => $value)
         {
-            $contents = str_replace('{'."$parameter".'}', $value, $contents);
+            $contents = str_replace('{'.$parameter.'}', $value, $contents);
         }
 
         if ($deleteNotFound)
