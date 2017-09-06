@@ -93,7 +93,7 @@ class Router
     }
 
     /**
-     * Dispatch the request (call the controller/action provided by the it)
+     * Dispatch the request (call the controller/action provided)
      *
      * Handles the controller class according to it's prefix / suffix (assumes the controller file is loaded)
      * Then call the init() controller's method then call the action's method in controller
@@ -145,10 +145,10 @@ class Router
     }
 
     /**
-     * Add a route to custom routes lists
+     * Add a route to custom route lists
      *
      * @param string $name
-     *      Route unique identifier
+     *      Unique route identifier
      * @param array $routeData
      *      An array containing route data as following :
      *      array(
