@@ -15,6 +15,9 @@ class Oxygen_Form
         $result = '<input';
         foreach ($params as $key => $value)
         {
+            // Sanitize the value
+            $value = $this->filterParam($value, $key);
+
             $result .= ' '.$key.'="'.$value.'"';
         }
         $result .= '/>';
@@ -41,6 +44,9 @@ class Oxygen_Form
         $result = '<textarea';
         foreach ($params as $key => $value)
         {
+            // Sanitize the value
+            $value = $this->filterParam($value, $key);
+
             $result .= ' '.$key.'="'.$value.'"';
         }
         $result .= '>';
@@ -72,6 +78,9 @@ class Oxygen_Form
                 if ($key == 'caption')
                     continue;
 
+                // Sanitize the value
+                $value = $this->filterParam($value, $key);
+
                 $optionsData .= ' '.$key.'="'.$value.'"';
             }
 
@@ -85,6 +94,9 @@ class Oxygen_Form
         $result = '<select';
         foreach ($params as $key => $value)
         {
+            // Sanitize the value
+            $value = $this->filterParam($value, $key);
+
             $result .= ' '.$key.'="'.$value.'"';
         }
         $result .= '>';
@@ -94,12 +106,20 @@ class Oxygen_Form
         return $result;
     }
 
-    public function getButton($caption = '', $params = array())
+    public function getButton($caption = '', $action=null, $params = array())
     {
+        if (!empty($action))
+        {
+            $params = array_merge(array('onclick' => $action, 'type' => 'button'), $params);
+        }
+
         // Create the markup
         $result = '<button';
         foreach ($params as $key => $value)
         {
+            // Sanitize the value
+            $value = $this->filterParam($value, $key);            
+
             $result .= ' '.$key.'="'.$value.'"';
         }
         $result .= '>';
@@ -118,6 +138,11 @@ class Oxygen_Form
         // Merge provided params with defaults ones
         $params = array_merge($defaultParams, $params);
 
-        return $this->getButton($caption, $params);
+        return $this->getButton($caption, null, $params);
+    }
+
+    protected function filterParam($value, $paramName)
+    {
+        return htmlEntities($value, ENT_QUOTES, 'UTF-8');
     }
 }
