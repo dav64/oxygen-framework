@@ -114,22 +114,17 @@ class Router
         $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
         $actionSuffix = $config->getOption('router/suffix/action', 'Action');
 
-        $controllerName = strtolower($request->getControllerName());
-        $actionName = strtolower($request->getActionName());
+        $controllerName = $request->getControllerName();
+        $actionName = $request->getActionName();
 
         // Format controller and action name
         $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
         $actionMethod = Oxygen_Utils::convertUriToAction($actionName, $actionPrefix, $actionSuffix);
 
-        $viewExtension = $config->getOption('view/extension', '.phtml');
-
         // Make the dispatch
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
-            $controller = new $controllerClassName(
-                $request,
-                new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension)
-            );
+            $controller = new $controllerClassName($request);
 
             $controller->init();
 
@@ -138,7 +133,7 @@ class Router
             else
                 throw new Router_Exception('Method "' . $controllerClassName. '->'. $actionMethod.'()' . '" not exists');
 
-            $controller->getView()->render();
+            $controller->render();
         }
         else
             throw new Router_Exception('Controller class "' . $controllerClassName . '" not exists or is not a controller');

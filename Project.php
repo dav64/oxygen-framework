@@ -139,7 +139,7 @@ Class Project
             }
         }
 
-        // aka spl_autoload_register
+        // aka run spl_autoload_register
         $this->_autoloader->register();
 
         return $this;
@@ -152,7 +152,7 @@ Class Project
      */
     public function run()
     {
-        // Let the user play with the router before the actual run
+        // Let the user play with the router before the actual run (e.g. to add custom routes)
         self::callPluginAction('beforeBootstrap', array(&$this->_router));
 
         $request = new Request();

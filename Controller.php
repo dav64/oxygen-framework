@@ -8,10 +8,16 @@ class Controller
 
     protected $view = null;
 
-    public function __construct(Request $request, View $view)
+    public function __construct(Request $request)
     {
+        $config = Config::getInstance();
+
+        $controllerName = $request->getControllerName();
+        $actionName = $request->getActionName();
+        $viewExtension = $config->getOption('view/extension', '.phtml');
+
         $this->_request = $request;
-        $this->view = $view;
+        $this->view = new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension);
     }
 
     function init()
@@ -58,5 +64,10 @@ class Controller
             throw new Controller_Exception('trying to unset reserved property');
 
         unset($this->_params[$name]);
+    }
+
+    public function render()
+    {
+        $this->view->render();
     }
 }
