@@ -1,13 +1,21 @@
 <?php
+/**
+ * Exception returned if one of reserved properties is being set/unset
+ */
 class Controller_Exception extends Exception {}
 
 class Controller
 {
     protected $_request = null;
-    protected $_params = array();
-
     protected $view = null;
 
+    /**
+     * Init the controller class
+     *
+     * The constructor must init the view
+     *
+     * @param Request $request
+     */
     public function __construct(Request $request)
     {
         $config = Config::getInstance();
@@ -20,15 +28,10 @@ class Controller
         $this->view = new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension);
     }
 
-    function init()
-    {
-        // Init function
-    }
-
-    public function setParams($params)
-    {
-        $this->_params = $params;
-    }
+    /**
+     * Init function called just after the constructor
+     */
+    public function init() {}
 
     public function getRequest()
     {
@@ -40,32 +43,38 @@ class Controller
         return $this->view;
     }
 
-    public function __get($name)
-    {
-        return isset($this->_params[$name]) ? $this->_params[$name] : null;
-    }
-
+    /**
+     * Ensure that the user cannot set value of our reserved properties
+     *
+     * @param string $name
+     * @param string $value
+     * @throws Controller_Exception
+     */
     public function __set($name, $value)
     {
         if ($name[0] == '_')
             throw new Controller_Exception('trying to set reserved property');
 
-        $this->_params[$name] = $value;
+        $this->$name = $value;
     }
 
-    public function __isset($name)
-    {
-        return isset($this->_params[$name]);
-    }
-
+    /**
+     * Ensure that the user cannot unset our reserved properties
+     *
+     * @param string $name
+     * @throws Controller_Exception
+     */
     public function __unset($name)
     {
         if ($name[0] == '_')
             throw new Controller_Exception('trying to unset reserved property');
 
-        unset($this->_params[$name]);
+        unset($this->$name);
     }
 
+    /**
+     * Function called after the action, it's main purpose is to render the view
+     */
     public function render()
     {
         $this->view->render();
