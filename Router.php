@@ -188,8 +188,23 @@ class Router
 
         foreach ($this->routes as $name => $route)
         {
+            // Reset parameters at each iteration
             $params = array();
-            if (isset($route['url'], $route['controller'], $route['action']))
+
+            // Check if route is a regex one
+            if (!empty($route['regex']) && preg_match($route['regex'], $uri, $matches))
+            {
+                // Remove the 'full match'
+                array_shift($matches);
+
+                $result = $route;
+                $params = $matches;
+
+                // We found the route, get out !
+                $foundRoute = true;
+                break;
+            }
+            else
             {
                 // Don't bother with the begining and last '/'
                 $routeUrl = trim($route['url'], '/');
@@ -228,13 +243,13 @@ class Router
                         ;
                     }
                 }
+            }
 
-                // If we found the route, get out
-                if ($foundRoute)
-                {
-                    $result = $route;
-                    break;
-                }
+            // If we found the route, get out
+            if ($foundRoute)
+            {
+                $result = $route;
+                break;
             }
         }
 
@@ -262,27 +277,19 @@ class Router
         {
             $route = $this->routes[$routeName];
 
-            $explodedRoute = explode('/', $route['url']);
-            foreach ($explodedRoute as $i => $part)
-            {
-                $explodedRoutePart = $explodedRoute[$i];
-
-                if ($explodedRoutePart[0] == ':')
-                {
-                    $paramName = substr($explodedRoutePart, 1);
+            $result = preg_replace_callback(
+                '/:([\w]+)/',
+                function ($matches) use ($params, $route) {
+                    $paramName = ltrim($matches[1], ':');
 
                     // fill parameter with (in order of presence) : provided value, default or null
-                    $explodedRoute[$i] = isset($params[$paramName])
+                    return isset($params[$paramName])
                         ? $params[$paramName]
                         : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
                     ;
-                }
-            }
-
-            $result = implode('/', $explodedRoute);
-
-            // Don't bother with the begining and last '/'
-            $result = trim($result, '/');
+                },
+                $route['url']
+            );
         }
 
         return '/'.$result;
