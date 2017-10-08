@@ -1,5 +1,6 @@
 <?php
 class Router_Exception extends Exception {}
+
 /**
  * Handle request URI and call associated controller / action
  *
@@ -67,17 +68,17 @@ class Router
                     $request->setAllParams(array_slice($explodedUri, 2));
             }
             else
-                $action = $config->getOption('router/default/action', 'index');
+                $action = $config->getOption('router/default/action');
         }
         else
         {
             // We are requesting the home page
-            $controllerName = $config->getOption('router/default/controller', 'index');
-            $action = $config->getOption('router/default/action', 'index');
+            $controllerName = $config->getOption('router/default/controller');
+            $action = $config->getOption('router/default/action');
         }
 
         // Convert get parameters to request parameters
-        if ($config->getOption('router/getAsParams', true) && !empty($request_uri[1]))
+        if ($config->getOption('router/convertGetAsParams') && !empty($request_uri[1]))
         {
             $params = array();
             parse_str($request_uri[1], $params);
@@ -111,8 +112,8 @@ class Router
         $controllerPrefix = $config->getOption('router/prefix/controller');
         $actionPrefix = $config->getOption('router/prefix/action');
 
-        $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
-        $actionSuffix = $config->getOption('router/suffix/action', 'Action');
+        $controllerSuffix = $config->getOption('router/suffix/controller');
+        $actionSuffix = $config->getOption('router/suffix/action');
 
         $controllerName = $request->getControllerName();
         $actionName = $request->getActionName();
@@ -291,6 +292,8 @@ class Router
                 $route['url']
             );
         }
+        else
+            throw new Router_Exception('Unknown route "'.$routeName.'"');
 
         return '/'.$result;
     }
