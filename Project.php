@@ -1,4 +1,9 @@
 <?php
+/**
+ * Oxygen Framework bootstrap file
+ *
+ */
+
 require __DIR__ . '/Autoloader.php';
 require __DIR__ . '/Router.php';
 require __DIR__ . '/View.php';
@@ -12,7 +17,7 @@ class Plugin_Exception extends Exception { }
 class Project_Exception extends Exception { }
 
 /**
- * Main application handler
+ * Main application (== Project) handler
  *
  */
 Class Project
@@ -51,10 +56,13 @@ Class Project
         return self::$instance;
     }
 
-    private function __construct($app_folder, $projectOptions)
+    private function __construct($app_folder, $projectOptions = array())
     {
-        $config = Config::getInstance();
-        $config->loadConfig($projectOptions);
+        if (!empty($projectOptions))
+        {
+            $config = Config::getInstance();
+            $config->loadConfig($projectOptions);
+        }
 
         $this->_appFolder = $app_folder;
 
@@ -64,6 +72,11 @@ Class Project
         // We can use custom autoloaded classes
         $this->registerAutoloader();
     }
+
+    /**
+     * Ensure singleton by preventing cloning
+     */
+    private function __clone() { }
 
     /**
      * Call a specific action plugin event
@@ -76,7 +89,7 @@ Class Project
     public static function callPluginAction($action, $params)
     {
         $config = Config::getInstance();
-        $pluginClass = $config->getOption('pluginsClass', 'Plugins');
+        $pluginClass = $config->getOption('pluginsClass');
 
         $params = is_array($params) ? $params : array($params);
         if (class_exists($pluginClass))
@@ -126,7 +139,7 @@ Class Project
 
         // Register our namespaces
         $this->_autoloader->addClassType('Oxygen', __DIR__ . '/Oxygen');
-        $this->_autoloader->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder', '/Helpers'));
+        $this->_autoloader->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder'));
 
         // Register configured namespaces
         if (!empty($config->getOption('namespaces')))

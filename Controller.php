@@ -22,7 +22,7 @@ class Controller
 
         $controllerName = $request->getControllerName();
         $actionName = $request->getActionName();
-        $viewExtension = $config->getOption('view/extension', '.phtml');
+        $viewExtension = $config->getOption('view/extension');
 
         $this->_request = $request;
         $this->view = new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension);

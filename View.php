@@ -32,7 +32,7 @@ class View
     public function __call($method, $args)
     {
         $config = Config::getInstance();
-        $helpers = $config->getOption('helpers', array());
+        $helpers = $config->getOption('helpers');
 
         $helperClass = isset($helpers[$method]) ? $helpers[$method] : null;
 
@@ -176,7 +176,7 @@ class View
         $config = Config::getInstance();
         $project = Project::getInstance();
 
-        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder', '/Views');
+        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder');
 
         $this->_viewVars = array_merge($this->_viewVars, $parameters);
 
@@ -206,7 +206,7 @@ class View
         $config = Config::getInstance();
         $project = Project::getInstance();
 
-        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder', '/Views');
+        $viewsFolder = $project->getAppFolder() . $config->getOption('view/folder');
 
         array_merge($this->_viewVars, $parameters);
 

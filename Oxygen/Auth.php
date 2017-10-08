@@ -4,14 +4,14 @@ class Oxygen_Auth
 {
 	/**
 	 * Get the user identity
-	 * 
+	 *
 	 * @return mixed
 	 */
     public static function getIdentity()
     {
         $session = new Oxygen_Session();
 
-        return $session->userData;
+        return $session->_OXYGEN_SESSION_IDENTITY;
     }
 
     /**
@@ -23,8 +23,8 @@ class Oxygen_Auth
         $session = new Oxygen_Session();
 
         if ($user)
-            $session->userData = $user;
+            $session->_OXYGEN_SESSION_IDENTITY = $user;
         else
-            unset($session->userData);
+            unset($session->_OXYGEN_SESSION_IDENTITY);
     }
 }

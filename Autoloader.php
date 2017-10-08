@@ -47,10 +47,10 @@ class Autoloader
     {
         $config = Config::getInstance();
 
-        $controllersFolder = $config->getOption('router/controllersFolder', '/Controllers');
+        $controllersFolder = $config->getOption('router/controllersFolder');
 
         $controllerPrefix = $config->getOption('router/prefix/controller');
-        $controllerSuffix = $config->getOption('router/suffix/controller', 'Controller');
+        $controllerSuffix = $config->getOption('router/suffix/controller');
 
         $filePrefix = $config->getOption('router/prefix/controllerFile');
         $fileSuffix = $config->getOption('router/suffix/controllerFile');
