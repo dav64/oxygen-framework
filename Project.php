@@ -43,7 +43,7 @@ Class Project
         if (self::$instance == null)
             self::$instance = new Project($app_folder, $projectOptions);
         else
-            throw new Project_Exception('Project already initalized, use Project::getInstance() instead');
+            throw new Project_Exception('Project already initialized, use Project::getInstance() instead');
 
         return self::$instance;
     }
@@ -51,7 +51,7 @@ Class Project
     public static function getInstance()
     {
         if (self::$instance == null)
-            throw new Project_Exception('Project not initialized');
+            throw new Project_Exception('Project not initialized, use Project::create($app_folder, $options = array()) instead');
 
         return self::$instance;
     }

@@ -179,7 +179,7 @@ class Router
      *       'params' => The parameter values found (if any)
      *   )
      */
-    protected function getRouteByUri($uri)
+    public function getRouteByUri($uri)
     {
         $result = false;
         $params = array();
