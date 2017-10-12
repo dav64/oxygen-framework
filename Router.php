@@ -240,7 +240,7 @@ class Router
                         // Fill parameter with (in order of presence) : provided value, default or null
                         $params[$paramName] = !empty($explodedUriPart)
                             ? $explodedUriPart
-                            : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
+                            : (isset($params[$paramName]) ? $params[$paramName] : null)
                         ;
                     }
                 }
@@ -286,7 +286,7 @@ class Router
                     // fill parameter with (in order of presence) : provided value, default or null
                     return isset($params[$paramName])
                         ? $params[$paramName]
-                        : (isset($route['parameters'][$paramName]) ? $route['parameters'][$paramName] : null)
+                        : (isset($route['values'][$paramName]) ? $route['values'][$paramName] : null)
                     ;
                 },
                 $route['url']
