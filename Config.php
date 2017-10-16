@@ -34,7 +34,7 @@ class Config
     ];
 
     /**
-     * Get singleton instance
+     * Get main config instance
      *
      * @return Config
      */
@@ -47,19 +47,16 @@ class Config
     }
 
     /**
-     * Ensure singleton by preventing cloning
-     */
-    private function __clone() { }
-
-    /**
      * Load config from an array
      *
      * @param array $options
+     * @param bool $merge
+     *      merge (true) or replace (false) existing configuration
      */
-    public static function loadConfig($options, $merge = true)
+    public function loadConfig($options, $merge = true)
     {
-        self::$_instance->_options = $merge
-            ? self::array_merge_recursive(self::$_instance->_options, $options)
+        $this->_options = $merge
+            ? self::array_merge_recursive($this->_options, $options)
             : $options;
     }
 
@@ -81,6 +78,18 @@ class Config
             throw new Config_Exception('Error while loading "'.$filename.'". JSON Error: '.json_last_error_msg());
 
         return $config;
+    }
+
+    /**
+     * Load configuration data from a file
+     *
+     * @param string $filename
+     * @return Config
+     */
+    public function loadFromJSONFile($filename, $merge = true)
+    {
+        $this->loadConfig(self::getArrayFromJSONFile($filename), $merge);
+        return $this;
     }
 
     /**

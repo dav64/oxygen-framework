@@ -215,7 +215,7 @@ Class Project
                 $this->_router->dispatch($request);
             }
             else
-                throw $e; // No error handler found, so just throw the exception
+                throw $e; // No error handler found, so we throw back the exception
         }
     }
 }

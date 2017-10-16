@@ -172,7 +172,7 @@ class Router
     /**
      * Find a route according to the passed URI (and populate parameters if any)
      *
-     * @param unknown $uri
+     * @param string $uri
      * @return Array
      *      array(
      *       'route' => The route array ['controller' => ..., 'action' => ..., ]
