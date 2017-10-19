@@ -107,7 +107,12 @@ class View
         $this->_viewFilename = $viewFile;
     }
 
-    public function render()
+    /**
+     * Render the view and send the response
+     *
+     * @param Response $response
+     */
+    public function render($response)
     {
         $config = Config::getInstance();
 
@@ -141,8 +146,13 @@ class View
                 if ($mainLayout)
                     $this->_content = $this->partial($mainLayout, array('_content' => $this->_content));
             }
+            ob_get_clean();
 
-            Project::callPluginAction('beforeRender', array(&$this));
+            $response->appendContent($this->_content, '_content');
+
+            Project::callPluginAction('beforeRender', array(&$response));
+
+            $response->render();
         }
         catch (Exception $e)
         {
@@ -150,8 +160,6 @@ class View
             throw $e;
         }
 
-        ob_get_clean();
-        echo $this->_content;
     }
 
     public function getContent()

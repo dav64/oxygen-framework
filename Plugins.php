@@ -1,20 +1,21 @@
 <?php
 /**
- * Base class for Plugins handler
- *
+ * Base class for Plugins handler.
+ * Your application's plugins must extend this class !
  */
 Class Plugins
 {
-
     /**
-     * Called before running the project, you can register custom routes to the router
+     * Called before running the project.
+     * You can register custom routes to the router.
      *
      * @param Router $router
      */
     public function beforeBootstrap(Router &$router) {}
 
     /**
-     * Called before dispatching the request, you can choose which controller / action to use
+     * Called before dispatching the request.
+     * You can choose which controller / action to use in router.
      *
      * @param Request $request
      */
@@ -22,6 +23,7 @@ Class Plugins
 
     /**
      * Called before adding layouts / partials to view
+     * You can add edit anything in view
      *
      * @param View $view
      */
@@ -29,10 +31,9 @@ Class Plugins
 
     /**
      * Called before sending the output to the browser
+     * You can compress (gzip) the response or add custom headers
      *
-     * @param View $view
+     * @param Response $response
      */
-    public function beforeRender(View &$view) {}
-
-
+    public function beforeRender(Response &$response) {}
 }

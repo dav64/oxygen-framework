@@ -7,6 +7,7 @@ class Controller_Exception extends Exception {}
 class Controller
 {
     protected $_request = null;
+    protected $_response = null;
     protected $view = null;
 
     /**
@@ -25,6 +26,7 @@ class Controller
         $viewExtension = $config->getOption('view/extension');
 
         $this->_request = $request;
+        $this->_response = new Response();
         $this->view = new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension);
     }
 
@@ -77,6 +79,6 @@ class Controller
      */
     public function render()
     {
-        $this->view->render();
+        $this->view->render($this->_response);
     }
 }

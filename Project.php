@@ -12,6 +12,7 @@ require __DIR__ . '/Helper.php';
 require __DIR__ . '/Plugins.php';
 require __DIR__ . '/Config.php';
 require __DIR__ . '/Request.php';
+require __DIR__ . '/Response.php';
 
 class Plugin_Exception extends Exception { }
 class Project_Exception extends Exception { }
@@ -27,6 +28,7 @@ Class Project
     private $_appFolder;
 
     private $_autoloader;
+
     private $_router;
 
     /**
