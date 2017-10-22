@@ -9,12 +9,11 @@ require __DIR__ . '/Router.php';
 require __DIR__ . '/View.php';
 require __DIR__ . '/Controller.php';
 require __DIR__ . '/Helper.php';
-require __DIR__ . '/Plugins.php';
+require __DIR__ . '/Plugin.php';
 require __DIR__ . '/Config.php';
 require __DIR__ . '/Request.php';
 require __DIR__ . '/Response.php';
 
-class Plugin_Exception extends Exception { }
 class Project_Exception extends Exception { }
 
 /**
@@ -23,13 +22,15 @@ class Project_Exception extends Exception { }
  */
 Class Project
 {
-    private static $instance = null;
+    protected static $_instance = null;
+    protected static $_plugins = null;
 
-    private $_appFolder;
+    protected $_appFolder;
+    protected $_autoloader;
 
-    private $_autoloader;
-
-    private $_router;
+    protected $_router = null;
+    protected $_request = null;
+    protected $_response = null;
 
     /**
      * Instanciate a MVC project
@@ -42,20 +43,20 @@ Class Project
      */
     public static function create($app_folder, $projectOptions = array())
     {
-        if (self::$instance == null)
-            self::$instance = new Project($app_folder, $projectOptions);
+        if (self::$_instance == null)
+            self::$_instance = new Project($app_folder, $projectOptions);
         else
             throw new Project_Exception('Project already initialized, use Project::getInstance() instead');
 
-        return self::$instance;
+        return self::$_instance;
     }
 
     public static function getInstance()
     {
-        if (self::$instance == null)
+        if (self::$_instance == null)
             throw new Project_Exception('Project not initialized, use Project::create($app_folder, $options = array()) instead');
 
-        return self::$instance;
+        return self::$_instance;
     }
 
     private function __construct($app_folder, $projectOptions = array())
@@ -69,9 +70,11 @@ Class Project
         $this->_appFolder = $app_folder;
 
         $this->_autoloader = new Autoloader($app_folder);
-        $this->_router = new Router();
 
-        // We can use custom autoloaded classes
+        $this->_router = new Router();
+        $this->_request = new Request();
+        $this->_response = new Response();
+
         $this->registerAutoloader();
     }
 
@@ -90,24 +93,47 @@ Class Project
      */
     public static function callPluginAction($action, $params)
     {
-        $config = Config::getInstance();
-        $pluginClass = $config->getOption('pluginsClass');
+        // First run, load plugins
+        if (null === self::$_plugins)
+        {
+            self::$_plugins = array();
+            $project = Project::getInstance();
+
+            $config = Config::getInstance();
+            $pluginClasses = $config->getOption('pluginsClass');
+
+            if (is_string($pluginClasses))
+                $pluginClasses = [$pluginClasses];
+
+            foreach ($pluginClasses as $pluginIndex => $pluginClass)
+            {
+                if (class_exists($pluginClass))
+                {
+                    $plugin = new $pluginClass(
+                        $project->_request,
+                        $project->_response,
+                        $project->_router
+                    );
+
+                    if (!is_a($plugin, 'Plugin'))
+                        throw new Plugin_Exception('Plugins class "' . $pluginClass . '" doesn\'t extend "Plugin" class');
+
+                    self::$_plugins[$pluginIndex] = $plugin;
+                }
+                else
+                    throw new Plugin_Exception('Plugin class "' . $pluginClass . '" Not found');
+            }
+        }
 
         $params = is_array($params) ? $params : array($params);
-        if (class_exists($pluginClass))
-        {
-            $plugins = new $pluginClass();
 
-            if (is_a($plugins, 'Plugins'))
-                call_user_func_array(
-                    array($plugins, $action),
-                    $params
-                );
-            else
-                throw new Plugin_Exception('Plugins class "' . $pluginClass . '" doesn\'t extend "Plugin" class');
+        foreach (self::$_plugins as $plugin)
+        {
+            call_user_func_array(
+                array($plugin, $action),
+                $params
+            );
         }
-        else
-            throw new Plugin_Exception('Plugin class "' . $pluginClass . '" Not found');
     }
 
     /**
@@ -160,6 +186,18 @@ Class Project
         return $this;
     }
 
+    protected function handleDispatch()
+    {
+        // Before dispatch, call plugin's 'beforeDispatch' handler
+        self::callPluginAction('beforeDispatch', array($this->_request));
+
+        // Load controller class
+        $this->_autoloader->loadControllerClass($this->_request->getControllerName());
+
+        // Make the actual dispatch
+        $this->_router->dispatch($this->_request, $this->_response);
+    }
+
     /**
      * Main project function
      *
@@ -170,20 +208,11 @@ Class Project
         // Let the user play with the router before the actual run (e.g. to add custom routes)
         self::callPluginAction('beforeBootstrap', array(&$this->_router));
 
-        $request = new Request();
-
-        $this->_router->route($request);
+        $this->_router->route($this->_request);
 
         try
         {
-            // Before dispatch, call plugin's 'beforeDispatch' handler
-            self::callPluginAction('beforeDispatch', array(&$request));
-
-            // Load controller class
-            $this->_autoloader->loadControllerClass($request->getControllerName());
-
-            // Make the actual dispatch
-            $this->_router->dispatch($request);
+            $this->handleDispatch();
         }
         catch (Exception $e)
         {
@@ -197,24 +226,17 @@ Class Project
             {
                 // Save old request route
                 $requestData = array(
-                    'controllerName' => $request->getControllerName(),
-                    'actionName' => $request->getActionName(),
-                    'params' => $request->getAllParams()
+                    'controllerName' => $this->_request->getControllerName(),
+                    'actionName' => $this->_request->getActionName(),
+                    'params' => $this->_request->getAllParams()
                 );
 
                 // Store the exception data in the request and go to the error handler
-                $request->setParam('exception', $e)->setParam('request', $requestData)
+                $this->_request->setParam('exception', $e)->setParam('request', $requestData)
                     ->setControllerName($errorControllerName)
                     ->setActionName($errorActionName);
 
-                // Call plugin's 'beforeDispatch' handler before dispatching the error controller
-                self::callPluginAction('beforeDispatch', array(&$request));
-
-                // Load the error handler controller file
-                $this->_autoloader->loadControllerClass($request->getControllerName());
-
-                // Make the actual dispatch
-                $this->_router->dispatch($request);
+                $this->handleDispatch();
             }
             else
                 throw $e; // No error handler found, so we throw back the exception

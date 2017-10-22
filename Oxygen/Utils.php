@@ -76,25 +76,18 @@ class Oxygen_Utils
     }
 
     /**
-     * Convert a table name to a class name
-     * ie. 'some_table_name' become 'SomeTableName'
+     * Join a text separated by specific separators by uppercasing surrouding letter
+     * The final text could be surrounded by prefix and suffix
+     * e.g. 'some-action-name' become '[Prefix]some-actionName[Suffix]'
+     *
+     * @param string $text
+     * @param string $prefix
+     * @param string $suffix
+     * @param array $separators
+     * @return string
      */
-    public static function convertToClassName($table_name)
+    public static function convertSeparatorToUcLetters($text, $prefix = '', $suffix = '', $separators = ['-', '_', ' '])
     {
-        return preg_replace_callback('/_[a-z]/', function ($matches) {
-          return strtoupper($matches[0])[1];
-        }, $table_name);
-    }
-
-    /**
-     * Convert a uri component to an action/controler classname
-     * ie. 'action-name' become 'PrefixActionNameSuffix'
-     */
-    public static function convertUriToAction($action, $prefix = '', $suffix = '')
-    {
-        return $prefix.preg_replace_callback('/[-_][a-z]/', function ($matches) {
-                $upper = strtoupper($matches[0]);
-                return $upper[1];
-        }, $action).$suffix;
+        return $prefix.lcfirst(str_replace($separators, '', ucwords($text, implode('', $separators)))).$suffix;
     }
 }

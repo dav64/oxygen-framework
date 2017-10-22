@@ -57,9 +57,9 @@ class Oxygen_ModelsGenerator
 
             // strip last 's' from table name (ie. table 'users' become class User)
             if (in_array($tableName, array_keys($special_tables)) || substr($tableName, -1) != 's')
-                $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : Oxygen_Utils::convertToClassName($tableName);
+                $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : Oxygen_Utils::convertSeparatorToUcLetters($tableName);
             else
-                $className = substr(Oxygen_Utils::convertToClassName($tableName), 0, -1);
+                $className = substr(Oxygen_Utils::convertSeparatorToUcLetters($tableName), 0, -1);
 
             $name = $tableName;
 
@@ -72,7 +72,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field => $fieldType)
             {
-                $class .= str_repeat($indentation, 1).'protected $'.Oxygen_Utils::convertToClassName($field)." = null;\n";
+                $class .= str_repeat($indentation, 1).'protected $'.Oxygen_Utils::convertSeparatorToUcLetters($field)." = null;\n";
             }
 
             // Constructor
@@ -87,7 +87,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field => $fieldType)
             {
-                $class .= str_repeat($indentation, 3).'$this->'.Oxygen_Utils::convertToClassName($field).
+                $class .= str_repeat($indentation, 3).'$this->'.Oxygen_Utils::convertSeparatorToUcLetters($field).
                     ' = isset($fields[\''.$field.'\']) ? $fields[\''.$field.'\'] : '.self::getDefaultValueByType($fieldType).';'."\n";
             }
             $class .= str_repeat($indentation, 2)."}\n";
@@ -97,7 +97,7 @@ class Oxygen_ModelsGenerator
             foreach ($fields as $field => $fieldType)
             {
                 $fieldValue = self::getDefaultValueByType($fieldType);
-                $class .= str_repeat($indentation, 3).'$this->'.Oxygen_Utils::convertToClassName($field)." = {$fieldValue};\n";
+                $class .= str_repeat($indentation, 3).'$this->'.Oxygen_Utils::convertSeparatorToUcLetters($field)." = {$fieldValue};\n";
             }
             $class .= str_repeat($indentation, 2)."}\n";
 
@@ -135,7 +135,7 @@ class Oxygen_ModelsGenerator
 
             foreach ($fields as $field => $fieldType)
             {
-                $camelCaseField = Oxygen_Utils::convertToClassName($field);
+                $camelCaseField = Oxygen_Utils::convertSeparatorToUcLetters($field);
                 $fieldType = !empty($fieldType) ? ', PDO::PARAM_'.strtoupper($fieldType) : '';
 
                 $class .= str_repeat($indentation, 2).'$res->bindValue(\':'.$field.'\', $this->'.$camelCaseField.$fieldType.'); '."\n";
@@ -171,7 +171,7 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat($indentation, 2).'{'."\n";
             foreach ($fields as $field => $fieldType)
             {
-                $camelCaseField = Oxygen_Utils::convertToClassName($field);
+                $camelCaseField = Oxygen_Utils::convertSeparatorToUcLetters($field);
                 $class .= str_repeat($indentation, 3).'$this->'.$camelCaseField.' = $row[\''.$field.'\'];'."\n";
             }
             $class .= str_repeat($indentation, 2).'}'."\n";
@@ -224,7 +224,7 @@ EOM;
             $class .= str_repeat($indentation, 1).'// Setters'."\n";
             foreach ($fields as $field => $fieldType)
             {
-                $camelCaseField = Oxygen_Utils::convertToClassName($field);
+                $camelCaseField = Oxygen_Utils::convertSeparatorToUcLetters($field);
 
                 $class .= str_repeat($indentation, 1).'function set'.ucfirst($camelCaseField).'($'.$camelCaseField.')'."\n";
                 $class .= str_repeat($indentation, 1).'{'."\n";
@@ -241,9 +241,9 @@ EOM;
             $class .= str_repeat($indentation, 1).'// Getters'."\n";
             foreach ($fields as $field => $fieldType)
             {
-                $class .= str_repeat($indentation, 1).'function get'.ucfirst(Oxygen_Utils::convertToClassName($field)).'()'."\n";
+                $class .= str_repeat($indentation, 1).'function get'.ucfirst(Oxygen_Utils::convertSeparatorToUcLetters($field)).'()'."\n";
                 $class .= str_repeat($indentation, 1).'{'."\n";
-                $class .= str_repeat($indentation, 2).'return $this->'.Oxygen_Utils::convertToClassName($field).';'."\n";
+                $class .= str_repeat($indentation, 2).'return $this->'.Oxygen_Utils::convertSeparatorToUcLetters($field).';'."\n";
                 $class .= str_repeat($indentation, 1).'}'."\n";
                 if ($field != $last_field)
                    $class .= "\n";

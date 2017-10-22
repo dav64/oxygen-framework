@@ -1,9 +1,11 @@
 <?php
 class Request
 {
-    private $controllerName = null;
-    private $actionName = null;
-    private $params = array();
+    protected $controllerName = null;
+    protected $actionName = null;
+    protected $params = array();
+
+    protected $isDispatched = null;
 
     public function isPost()
     {
@@ -35,6 +37,17 @@ class Request
     {
         $this->actionName = $value;
         return $this;
+    }
+
+    public function setDispatched($value)
+    {
+        $this->isDispatched = $value;
+        return $this;
+    }
+
+    public function getDispatched()
+    {
+        return $this->isDispatched;
     }
 
     public function getParam($paramName, $defaultValue = null)

@@ -23,7 +23,7 @@ class Router
      * @param Request $request
      *      The request to compute controller and action
      */
-    public function route(&$request)
+    public function route($request)
     {
         $config = Config::getInstance();
 
@@ -102,10 +102,12 @@ class Router
      *
      * @param Request $request
      *      The request to dispatch
+     * @param Response $response
+     *      The response result
      * @throws Router_Exception
      *      If the controller / action could not be loaded
      */
-    public function dispatch($request)
+    public function dispatch($request, $response)
     {
         $config = Config::getInstance();
 
@@ -119,13 +121,13 @@ class Router
         $actionName = $request->getActionName();
 
         // Format controller and action name
-        $controllerClassName = ucfirst(Oxygen_Utils::convertUriToAction($controllerName, $controllerPrefix, $controllerSuffix));
-        $actionMethod = Oxygen_Utils::convertUriToAction($actionName, $actionPrefix, $actionSuffix);
+        $controllerClassName = Oxygen_Utils::convertSeparatorToUcLetters($controllerName, $controllerPrefix, $controllerSuffix);
+        $actionMethod = Oxygen_Utils::convertSeparatorToUcLetters($actionName, $actionPrefix, $actionSuffix);
 
         // Make the dispatch
         if (!empty($controllerClassName) && class_exists($controllerClassName) && is_subclass_of($controllerClassName, 'Controller'))
         {
-            $controller = new $controllerClassName($request);
+            $controller = new $controllerClassName($request, $response);
 
             $controller->init();
 

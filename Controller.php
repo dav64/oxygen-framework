@@ -17,7 +17,7 @@ class Controller
      *
      * @param Request $request
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, Response $response)
     {
         $config = Config::getInstance();
 
@@ -26,7 +26,8 @@ class Controller
         $viewExtension = $config->getOption('view/extension');
 
         $this->_request = $request;
-        $this->_response = new Response();
+        $this->_response = $response;
+
         $this->view = new View($controllerName.DIRECTORY_SEPARATOR.$actionName . $viewExtension);
     }
 
@@ -75,7 +76,8 @@ class Controller
     }
 
     /**
-     * Function called after the action, it's main purpose is to render the view
+     * Function called after the action, it's main purpose is to render
+     * the view into the response's content
      */
     public function render()
     {
