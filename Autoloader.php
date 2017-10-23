@@ -2,60 +2,32 @@
 class Autoloader
 {
     protected $appFolder = '';
-    protected $namespaces = array();
+    protected $namespaces = array(
+        'Oxygen' => __DIR__ . '/Oxygen'
+    );
+
+    /**
+     * Constructor
+     *
+     * @param string $rootDir
+     *      Directory used as root classes folder
+     */
+    public function __construct($rootDir)
+    {
+        $this->appFolder = $rootDir;
+    }
 
     /**
      * Main autoloader function
-     * load the class 'Namespace_Class_Name' by require_once('Namespace/ClassName.php')
      *
      * @param string $className
      */
     public function autoload($className)
     {
-        $classFile = null;
+        $classFile = $this->getClassFileFromClassName($className);
 
-        $config = Config::getInstance();
-
-        foreach ($this->namespaces as $namespace => $namespaceFolder)
-        {
-            if (substr($className, 0, strlen($namespace)) === $namespace)
-            {
-                // Remove the namespace and starting underscore in class name
-                $classNameWithoutNamespace = substr($className, strlen($namespace)+1);
-
-                // Try the to load class file at the namespace root folder
-                $classFile = $namespaceFolder . DIRECTORY_SEPARATOR . $classNameWithoutNamespace;
-
-                if (file_exists($classFile.'.php'))
-                {
-                    $classFile .= '.php';
-                    break;
-                }
-                else
-                {
-                    // Replace all underscores by directoriy separators and find the class file
-                    $classFile = $namespaceFolder . DIRECTORY_SEPARATOR
-                        . str_replace('_', DIRECTORY_SEPARATOR, $classNameWithoutNamespace);
-
-                    if (file_exists($classFile.'.php'))
-                    {
-                        $classFile .= '.php';
-                        break;
-                    }
-                }
-            }
-
-            // This is not the wanted namespace, continue...
-            $classFile = '';
-        }
-
-        if (!empty($classFile))
+        if ($classFile)
             require_once $classFile;
-    }
-
-    public function __construct($rootDir)
-    {
-        $this->appFolder = $rootDir;
     }
 
     /**
@@ -68,7 +40,7 @@ class Autoloader
      */
     public function addClassType($type, $folder)
     {
-        $this->namespaces[$type] = $folder;
+        $this->namespaces[$type] = $this->appFolder.$folder;
     }
 
     /**
@@ -113,5 +85,62 @@ class Autoloader
 
         if (!empty ($classFile) && file_exists($classFile))
             require_once $classFile;
+    }
+
+    /**
+     * Get the class file from a class name
+     * 'Namespace_Class_Name' to 'Namespace/ClassName'
+     *
+     * Dry run will output all file proposals (without extension)
+     * e.g. 'Namespace_Class_Name' to ['Namespace/Class_Name.php', 'Namespace/Class/Name']
+     *
+     * @param string $className
+     *      The class to load
+     * @param bool $dryRun
+     *      if true, $result will contain all proposals
+     * @return boolean|array
+     */
+    public function getClassFileFromClassName($className, $dryRun = false)
+    {
+        $classFile = false;
+        $classFileList = [];
+
+        $config = Config::getInstance();
+
+        foreach ($this->namespaces as $namespace => $namespaceFolder)
+        {
+            if (substr($className, 0, strlen($namespace)) === $namespace)
+            {
+                $classFileList = [];
+
+                // Remove the namespace and starting underscore in class name
+                $classNameWithoutNamespace = substr($className, strlen($namespace)+1);
+
+                do
+                {
+                    $pos = strpos($classNameWithoutNamespace, '_');
+
+                    // Try the to load class file at the namespace root folder
+                    $classFile = $namespaceFolder . DIRECTORY_SEPARATOR . $classNameWithoutNamespace;
+
+                    if (!$dryRun && file_exists($classFile.'.php'))
+                    {
+                        $classFile .= '.php';
+                            break 2;
+                    }
+                    elseif ($dryRun)
+                        $classFileList[] = $classFile;
+
+                    if ($pos != false)
+                        $classNameWithoutNamespace = substr_replace($classNameWithoutNamespace, DIRECTORY_SEPARATOR, $pos, 1);
+
+                } while ($pos !== false);
+            }
+
+            // This is not the wanted namespace, continue...
+            $classFile = false;
+        }
+
+        return !$dryRun ? $classFile : $classFileList;
     }
 }

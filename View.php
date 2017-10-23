@@ -149,10 +149,6 @@ class View
             ob_get_clean();
 
             $response->appendContent($this->_content, '_content');
-
-            Project::callPluginAction('beforeRender', array(&$response));
-
-            $response->render();
         }
         catch (Exception $e)
         {

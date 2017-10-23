@@ -165,9 +165,8 @@ Class Project
     {
         $config = Config::getInstance();
 
-        // Register our namespaces
-        $this->_autoloader->addClassType('Oxygen', __DIR__ . '/Oxygen');
-        $this->_autoloader->addClassType('Helper', $this->_appFolder. $config->getOption('view/helpersFolder'));
+        // Register helper namespaces
+        $this->_autoloader->addClassType('Helper', $config->getOption('view/helpersFolder'));
 
         // Register configured namespaces
         if (!empty($config->getOption('namespaces')))
@@ -176,7 +175,7 @@ Class Project
 
             foreach ($classtypes as $prefix => $folder)
             {
-                $this->_autoloader->addClassType($prefix, $this->_appFolder . $folder);
+                $this->_autoloader->addClassType($prefix, $folder);
             }
         }
 
@@ -241,5 +240,8 @@ Class Project
             else
                 throw $e; // No error handler found, so we throw back the exception
         }
+
+        Project::callPluginAction('beforeRender', array(&$this->_response));
+        $this->_response->render();
     }
 }
