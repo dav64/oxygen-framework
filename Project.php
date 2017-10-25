@@ -154,6 +154,11 @@ Class Project
         return $this->_appFolder;
     }
 
+    public function getAutoloader()
+    {
+        return $this->_autoloader;
+    }
+
     /**
      * Add our own __autoload implementation
      *
