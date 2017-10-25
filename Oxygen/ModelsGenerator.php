@@ -1,34 +1,87 @@
 <?php
+require __DIR__ . '/Model_Generators/Abstract.php';
 
 class Generator_Exception extends Exception {};
 
 class Oxygen_ModelsGenerator
 {
-    /* $special_tables format
-          array(
-            'table'                // Keep Table name as class
-            'table' => 'className' // Set new className for this table
-        );
-    */
-
-    // TODO: set parameters as array ? (Not bother with optional parameters order)
-    public static function generateModels(
-        $classPath,
-        $generatedClassPath,
-        $adapterName = null,
-        $special_tables = array(),
-        $dbms = 'MySQL',
-        $model_prefix = 'Model_',
-        $generated_model_prefix = 'Model_Generated_',
-        $indentation = '    '
-    )
+    /**
+     * Generate Models from tables schemas
+     *
+     * @param array $options
+     *      Generator options as key/value, here is the full explanation:
+     *       'classType' => 'Model', The class type to generate (must be registered in autoloader)
+     *       'subclass' => '', Subclass to append to main class type, e.g. 'Foo' => 'Model_Foo'
+     *       'adapterName' => null, The PDO adapter to use to get table structures
+     *       'specialTables' => [], An array to specify special table(s) to convert (see below)
+     *       'dbms' => 'MySQL', The DBMS to use (at the moment, only 'MySQL' or 'SQLite' is supported)
+     *       'generatedSubclass' => 'Generated', The subclass to apend to generated class,
+     *              e.g. with default value, the table named 'foo' becomes to'Model_Generated_Foo'
+     *       'indentation' => '    ' The indentation to use. Feel free to use your own coding rules :)
+     *
+     *       About the special tables
+     *          each key/value pair is a table
+     *          If key is a table name, the model name will be the value (with an ucfirst)
+     *          If no key is specified (or key is numeric) the table name will be keep as-is
+     *          otherwise any ending 's' will be removed from table, Here's sample array :
+     *          array(
+     *              'foobars'         // Keep Table name 'foobars' as class name (otherwise it becomes 'foobar')
+     *              'foobar' => 'baz' // Set class name to be 'baz' for the table 'foobar'
+     *
+     * @throws Generator_Exception
+     */
+    public static function generateModels($options = [])
     {
+        if (!Oxygen_Utils::isDev())
+            throw new Generator_Exception("Models generator is not intended for production use !");
+
+        if (!is_array($options))
+            throw new Generator_Exception("Models generator options must be an array !");
+
+        $defaultOptions = [
+            'classType' => 'Model',
+            'subclass' => '',
+            'adapterName' => null,
+            'specialTables' => [],
+            'dbms' => 'MySQL',
+            'generatedSubclass' => 'Generated',
+            'indentation' => '    '
+        ];
+
+        // Options init
+        $options = array_merge($defaultOptions, $options);
+        $dbms = $options['dbms'];
+        $namespace = $options['classType'];
+        $subclass = !empty($options['subclass']) ? '_'.$options['subclass'] : '';
+        $generatedSubclass = $options['generatedSubclass'];
+
+        $indentation = $options['indentation'];
+        $specialTables = $options['specialTables'];
+
+        $autoloader = Project::getInstance()->getAutoloader();
+
+        $generatedClassNamePrefix = $namespace.$subclass.'_'.$generatedSubclass;
+
+        $classPath = $autoloader->getClassFileFromClassName($namespace.$subclass, true);
+        $classPath  = end($classPath).DIRECTORY_SEPARATOR;
+
+        $generatedClassPath = $autoloader->getClassFileFromClassName($generatedClassNamePrefix, true);
+        $generatedClassPath  = end($generatedClassPath).DIRECTORY_SEPARATOR;
+
+        $adapterName = $options['adapterName'];
         $db = $adapterName !== null ? Oxygen_Db::getAdapter($adapterName) : Oxygen_Db::getDefaultAdapter();
         $adapterString = $adapterName !== null ? 'Oxygen_Db::getAdapter(\''.$adapterName.'\')' : 'Oxygen_Db::getDefaultAdapter()';
+
+        $result = [];
 
         if (!$db)
             throw new Generator_Exception("Unable to connect to the database");
 
+        // If output folder not exists, create it
+        if (!is_dir($generatedClassPath))
+            mkdir($generatedClassPath, 0777, true);
+
+        // If output folder still not exists, throw an exception
         if (!is_dir($generatedClassPath) || !is_writable($generatedClassPath))
             throw new Generator_Exception("Directory '". $generatedClassPath . "' must exist and be writtable");
 
@@ -46,8 +99,8 @@ class Oxygen_ModelsGenerator
 
         $generator = new $generatorClass($db);
 
-        //if (!is_subclass_of($generator, 'DBMS'))
-        //    throw new Generator_Exception("DBMS handler not correct");
+        if (!is_subclass_of($generator, 'Oxygen_Model_Generator_Abstract'))
+            throw new Generator_Exception("Database handler for $dbms not found");
 
         $tables = $generator->getTables();
 
@@ -56,19 +109,23 @@ class Oxygen_ModelsGenerator
             $class = '<?php'."\n";
 
             // strip last 's' from table name (ie. table 'users' become class User)
-            if (in_array($tableName, array_keys($special_tables)) || substr($tableName, -1) != 's')
-                $className = !empty($special_tables[$tableName]) ? $special_tables[$tableName] : Oxygen_Utils::convertSeparatorToUcLetters($tableName);
+            if (in_array($tableName, array_keys($specialTables)) || substr($tableName, -1) != 's')
+                $classNameRaw = !empty($specialTables[$tableName]) ? $specialTables[$tableName] : Oxygen_Utils::convertSeparatorToUcLetters($tableName);
             else
-                $className = substr(Oxygen_Utils::convertSeparatorToUcLetters($tableName), 0, -1);
+                $classNameRaw = substr(Oxygen_Utils::convertSeparatorToUcLetters($tableName), 0, -1);
 
             $name = $tableName;
+            $classNameRaw = ucfirst($classNameRaw);
+
+            $className = $namespace . $subclass .'_'. $classNameRaw;
+            $generatedClassName = $generatedClassNamePrefix .'_'. $classNameRaw;
 
             $fields = $generator->getFieldsList($tableName);
 
             end($fields);
             $last_field = key($fields);
 
-            $class .= "class " . $generated_model_prefix . ucfirst($className) . "\n{\n";
+            $class .= "class " . $generatedClassName . "\n{\n";
 
             foreach ($fields as $field => $fieldType)
             {
@@ -216,7 +273,7 @@ __INDENTATION__}
 EOM;
             $class .= str_replace(
                 array('__TABLE__', '__ADAPTER__', '__CLASSNAME__', '__INDENTATION__'),
-                array($tableName, $adapterString, $model_prefix.ucfirst($className), $indentation),
+                array($tableName, $adapterString, $className, $indentation),
                 $findPrototype
             )."\n\n";
 
@@ -253,21 +310,24 @@ EOM;
             $class .= '}'."\n";
 
             // Writing base model file
-            file_put_contents($generatedClassPath . ucfirst($className).'.php', $class);
+            file_put_contents($generatedClassPath . $classNameRaw.'.php', $class);
 
-            echo 'Generated Model '.ucfirst($className).'.php'."<br/>\n";
+            $result[$className] = $generatedClassPath . $classNameRaw.'.php';
 
             // Create Model in model folder if not exists
-            if (!file_exists($classPath . ucfirst($className).'.php'))
+            if (!file_exists($classPath . $classNameRaw.'.php'))
             {
                 $model = "<?php\n";
-                $model .= 'class '.$model_prefix.ucfirst($className).' extends ' . $generated_model_prefix . ucfirst($className) . "\n";
+                $model .= 'class '. $className.' extends ' . $generatedClassName . "\n";
                 $model .= "{\n\n";
                 $model .= "}\n";
 
-                file_put_contents($classPath . ucfirst($className).'.php', $model);
+                file_put_contents($classPath . $classNameRaw.'.php', $model);
+                $result[$generatedClassName] = $classPath . $classNameRaw.'.php';
             }
         }
+
+        return $result;
     }
 
     protected static function getDefaultValueByType($type)

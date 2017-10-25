@@ -1,6 +1,9 @@
 <?php
 
-class Oxygen_Model_Generator_MySQL
+/**
+ * Model generator for a MySQL database type
+ */
+class Oxygen_Model_Generator_MySQL extends Oxygen_Model_Generator_Abstract
 {
     protected $db = NULL;
 
@@ -13,16 +16,13 @@ class Oxygen_Model_Generator_MySQL
     {
         $result = array();
 
-        // We use the fetch num because the field is named 'Tables_in_DATABASE_NAME'
-        $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_NUM);
-        $res = $this->db->prepare("show tables");
-        $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $res = $this->db->prepare("show table status");
 
         $res->execute();
 
         while (($row = $res->fetch()))
         {
-            $result[] = $row[0];
+            $result[] = $row['Name'];
         }
 
         return $result;

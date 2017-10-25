@@ -1,6 +1,9 @@
 <?php
 
-class Oxygen_Model_Generator_SQLite
+/**
+ * Model generator for a SQLite database type
+ */
+class Oxygen_Model_Generator_SQLite extends Oxygen_Model_Generator_Abstract
 {
     protected $db = NULL;
 
