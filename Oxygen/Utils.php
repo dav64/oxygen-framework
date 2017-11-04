@@ -76,6 +76,17 @@ class Oxygen_Utils
     }
 
     /**
+     * Check if the array has string keys (== is associative)
+     *
+     * @param array $array
+     * @return boolean
+     */
+    public static function isAssociativeArray($array)
+    {
+        return count(array_filter(array_keys($array), 'is_string')) > 0;
+    }
+
+    /**
      * Join a text separated by specific separators by uppercasing surrouding letter
      * The final text could be surrounded by prefix and suffix
      * e.g. 'some-action-name' become '[Prefix]some-actionName[Suffix]'

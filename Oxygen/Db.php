@@ -9,7 +9,7 @@ class Oxygen_Db
 
     /**
      * Get the DB adapter named 'default'
-     * 
+     *
      * @return boolean|mixed
      */
     public static function getDefaultAdapter()
@@ -19,7 +19,7 @@ class Oxygen_Db
 
     /**
      * Get a PDO db adapter by name
-     * 
+     *
      * @param unknown $adapterName
      * @throws Db_Exception
      * @return boolean|mixed
@@ -61,7 +61,7 @@ class Oxygen_Db
 
     /**
      * Register DB adapters
-     * 
+     *
      * @param array $adaptersList
      */
     public static function loadAdapters($adaptersList)
@@ -80,7 +80,7 @@ class Oxygen_Db
      *      'where' => array('cond1', 'cond2')
      *      'other' => array('ORDER BY something')
      * )
-     * 
+     *
      * @throws Db_Exception
      * @return mixed
      * */
@@ -132,7 +132,23 @@ class Oxygen_Db
             }
 
             if (!empty($criterion['where']))
+            {
+                // if it's associative array, keys are fields and values are requested values
+                if (Oxygen_Utils::isAssociativeArray($criterion['where']) && empty($criterion['bind']))
+                {
+                    $fieldsWhere = [];
+
+                    foreach ($criterion['where'] as $field => $value)
+                    {
+                        $fieldsWhere[] = '`'.$field.'` = :'.$field;
+                        $criterion['bind'][$field] = $value;
+                    }
+
+                    $criterion['where'] = $fieldsWhere;
+                }
+
                 $where = 'WHERE ('. (is_array($criterion['where']) ? implode(') AND (', $criterion['where']) : $criterion['where']). ')';
+            }
 
             if (!empty($criterion['other']))
                 $other = is_array($criterion['other']) ? implode("\n", $criterion['other']) : $criterion['other'];
