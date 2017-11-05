@@ -121,7 +121,7 @@ class Router
         $actionName = $request->getActionName();
 
         // Format controller and action name
-        $controllerClassName = Oxygen_Utils::convertSeparatorToUcLetters($controllerName, $controllerPrefix, $controllerSuffix);
+        $controllerClassName = ucfirst(Oxygen_Utils::convertSeparatorToUcLetters($controllerName, $controllerPrefix, $controllerSuffix));
         $actionMethod = Oxygen_Utils::convertSeparatorToUcLetters($actionName, $actionPrefix, $actionSuffix);
 
         // Make the dispatch

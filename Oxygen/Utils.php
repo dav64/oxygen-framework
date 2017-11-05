@@ -89,7 +89,7 @@ class Oxygen_Utils
     /**
      * Join a text separated by specific separators by uppercasing surrouding letter
      * The final text could be surrounded by prefix and suffix
-     * e.g. 'some-action-name' become '[Prefix]some-actionName[Suffix]'
+     * e.g. 'some-action-name' become '[Prefix]someActionName[Suffix]'
      *
      * @param string $text
      * @param string $prefix
