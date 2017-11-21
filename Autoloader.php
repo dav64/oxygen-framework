@@ -114,7 +114,11 @@ class Autoloader
                 $classFileList = [];
 
                 // Remove the namespace and starting underscore in class name
-                $classNameWithoutNamespace = substr($className, strlen($namespace)+1);
+                $classNameWithoutNamespace = substr($className, strlen($namespace));
+
+                $classNameWithoutNamespace = $classNameWithoutNamespace[0] == '_'
+                    ? substr($classNameWithoutNamespace, 1)
+                    : $classNameWithoutNamespace;
 
                 do
                 {
