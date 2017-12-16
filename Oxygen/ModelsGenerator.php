@@ -12,14 +12,14 @@ class Oxygen_ModelsGenerator
      *      Generator options as key/value, here is the full explanation:
      *       'classType' => 'Model', The class type to generate (must be registered in autoloader)
      *       'subclass' => '', Subclass to append to main class type, e.g. 'Foo' => 'Model_Foo'
-     *       'adapterName' => null, The PDO adapter to use to get table structures
+     *       'adapterName' => null, The PDO adapter name to use to get table structures. Uses the default if empty
      *       'specialTables' => [], An array to specify special table(s) to convert (see below)
      *       'dbms' => 'MySQL', The DBMS to use (at the moment, only 'MySQL' or 'SQLite' is supported)
      *       'generatedSubclass' => 'Generated', The subclass to apend to generated class,
      *              e.g. with default value, the table named 'foo' becomes to'Model_Generated_Foo'
-     *       'indentation' => '    ' The indentation to use. Feel free to use your own coding rules :)
+     *       'indentation' => '    ' The indent level chars to use. Feel free to use your own coding rules :)
      *
-     *       About the special tables
+     *       About the special tables field
      *          each key/value pair is a table
      *          If key is a table name, the model name will be the value (with an ucfirst)
      *          If no key is specified (or key is numeric) the table name will be keep as-is
@@ -32,6 +32,8 @@ class Oxygen_ModelsGenerator
      */
     public static function generateModels($options = [])
     {
+        // TODO: Add PHPDoc comments in each function headers
+
         if (!Oxygen_Utils::isDev())
             throw new Generator_Exception("Models generator is not intended for production use !");
 
@@ -160,11 +162,23 @@ class Oxygen_ModelsGenerator
 
             $class .= str_repeat($indentation, 1)."}\n\n";
 
+            // Database adapter function
+            $class .= str_repeat($indentation, 1).'protected static function _getDbAdapter()'."\n";
+            $class .= str_repeat($indentation, 1).'{'."\n";
+            $class .= str_repeat($indentation, 2).'return '.$adapterString.';'."\n";
+            $class .= str_repeat($indentation, 1).'}'."\n\n";
+
+            // Table name function
+            $class .= str_repeat($indentation, 1).'protected static function _getTableName()'."\n";
+            $class .= str_repeat($indentation, 1).'{'."\n";
+            $class .= str_repeat($indentation, 2).'return \''.$tableName.'\';'."\n";
+            $class .= str_repeat($indentation, 1).'}'."\n\n";
+
             // Save function
-            $class .= str_repeat($indentation, 1)."function save()\n    {\n";
-            $class .= str_repeat($indentation, 2).'$db = '.$adapterString.";\n\n";
-            $class .= str_repeat($indentation, 2).'$res = $db->prepare("'."\n";
-            $class .= str_repeat($indentation, 3).'INSERT INTO '.$tableName.' (';
+            $class .= str_repeat($indentation, 1)."public function save()\n".$indentation."{\n";
+            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter()'.";\n\n";
+            $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
+            $class .= str_repeat($indentation, 3).'INSERT INTO `\'.self::_getTableName().\'` (';
             foreach ($fields as $field => $fieldType)
             {
                 $class .= '`'.$field.'`';
@@ -188,7 +202,7 @@ class Oxygen_ModelsGenerator
                     $class .= ",";
                 $class .= "\n";
             }
-            $class .= str_repeat($indentation, 2).'");'."\n\n";
+            $class .= str_repeat($indentation, 2).'\');'."\n\n";
 
             foreach ($fields as $field => $fieldType)
             {
@@ -206,9 +220,9 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat($indentation, 1).'}'."\n\n";
 
             // Load function
-            $class .= str_repeat($indentation, 1)."function load(\$id = 0)\n    {\n";
-            $class .= str_repeat($indentation, 2).'$db = '.$adapterString.";\n\n";
-            $class .= str_repeat($indentation, 2).'$res = $db->prepare("'."\n";
+            $class .= str_repeat($indentation, 1).'public function load($id = 0)'."\n".$indentation."{\n";
+            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter();'."\n\n";
+            $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
             $class .= str_repeat($indentation, 3).'SELECT ';
             foreach ($fields as $field => $fieldType)
             {
@@ -217,9 +231,9 @@ class Oxygen_ModelsGenerator
                     $class .= ", ";
             }
             $class .= "\n";
-            $class .= str_repeat($indentation, 3).'FROM '.$tableName."\n";
+            $class .= str_repeat($indentation, 3).'FROM `\'.self::_getTableName().\'`'."\n";
             $class .= str_repeat($indentation, 3).'WHERE id = :id'."\n";
-            $class .= str_repeat($indentation, 2).'");'."\n\n";
+            $class .= str_repeat($indentation, 2).'\');'."\n\n";
 
             $class .= str_repeat($indentation, 2).'$res->bindValue(\':id\', !empty($id) ? $id : $this->id);'."\n\n";
             $class .= str_repeat($indentation, 2).'$res->execute();'."\n\n";
@@ -236,12 +250,12 @@ class Oxygen_ModelsGenerator
             $class .= str_repeat($indentation, 1).'}'."\n\n";
 
             // Delete function
-            $class .= str_repeat($indentation, 1)."function delete(\$id = 0)\n    {\n";
-            $class .= str_repeat($indentation, 2).'$db = '.$adapterString.";\n\n";
-            $class .= str_repeat($indentation, 2).'$res = $db->prepare("'."\n";
-            $class .= str_repeat($indentation, 3).'DELETE FROM '.$tableName."\n";
+            $class .= str_repeat($indentation, 1)."public function delete(\$id = 0)\n".$indentation."{\n";
+            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter();'."\n\n";
+            $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
+            $class .= str_repeat($indentation, 3).'DELETE FROM `\'.self::_getTableName().\'`'."\n";
             $class .= str_repeat($indentation, 3).'WHERE id = :id'."\n";
-            $class .= str_repeat($indentation, 2).'");'."\n\n";
+            $class .= str_repeat($indentation, 2).'\');'."\n\n";
 
             $class .= str_repeat($indentation, 2).'$res->bindValue(\':id\', !empty($id) ? $id : $this->id);'."\n\n";
             $class .= str_repeat($indentation, 2).'$res->execute();'."\n";
@@ -263,8 +277,8 @@ __INDENTATION__ * */
 __INDENTATION__public static function find($criterion = array(), $returnObjects = false)
 __INDENTATION__{
 __INDENTATION____INDENTATION__return Oxygen_Db::find(
-__INDENTATION____INDENTATION____INDENTATION____ADAPTER__,
-__INDENTATION____INDENTATION____INDENTATION__'__TABLE__',
+__INDENTATION____INDENTATION____INDENTATION__self::_getDbAdapter(),
+__INDENTATION____INDENTATION____INDENTATION__self::_getTableName(),
 __INDENTATION____INDENTATION____INDENTATION__'__CLASSNAME__',
 __INDENTATION____INDENTATION____INDENTATION__$criterion,
 __INDENTATION____INDENTATION____INDENTATION__$returnObjects
@@ -272,8 +286,8 @@ __INDENTATION____INDENTATION__);
 __INDENTATION__}
 EOM;
             $class .= str_replace(
-                array('__TABLE__', '__ADAPTER__', '__CLASSNAME__', '__INDENTATION__'),
-                array($tableName, $adapterString, $className, $indentation),
+                array('__CLASSNAME__', '__INDENTATION__'),
+                array($className, $indentation),
                 $findPrototype
             )."\n\n";
 
@@ -283,7 +297,7 @@ EOM;
             {
                 $camelCaseField = Oxygen_Utils::convertSeparatorToUcLetters($field);
 
-                $class .= str_repeat($indentation, 1).'function set'.ucfirst($camelCaseField).'($'.$camelCaseField.')'."\n";
+                $class .= str_repeat($indentation, 1).'public function set'.ucfirst($camelCaseField).'($'.$camelCaseField.')'."\n";
                 $class .= str_repeat($indentation, 1).'{'."\n";
                 $class .= str_repeat($indentation, 2).'$this->'.$camelCaseField.' = $'.$camelCaseField.';'."\n";
                 $class .= str_repeat($indentation, 2).'return $this;'."\n";
@@ -298,7 +312,7 @@ EOM;
             $class .= str_repeat($indentation, 1).'// Getters'."\n";
             foreach ($fields as $field => $fieldType)
             {
-                $class .= str_repeat($indentation, 1).'function get'.ucfirst(Oxygen_Utils::convertSeparatorToUcLetters($field)).'()'."\n";
+                $class .= str_repeat($indentation, 1).'public function get'.ucfirst(Oxygen_Utils::convertSeparatorToUcLetters($field)).'()'."\n";
                 $class .= str_repeat($indentation, 1).'{'."\n";
                 $class .= str_repeat($indentation, 2).'return $this->'.Oxygen_Utils::convertSeparatorToUcLetters($field).';'."\n";
                 $class .= str_repeat($indentation, 1).'}'."\n";
