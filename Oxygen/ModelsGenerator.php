@@ -176,9 +176,9 @@ class Oxygen_ModelsGenerator
 
             // Save function
             $class .= str_repeat($indentation, 1)."public function save()\n".$indentation."{\n";
-            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter()'.";\n\n";
+            $class .= str_repeat($indentation, 2).'$db = static::_getDbAdapter()'.";\n\n";
             $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
-            $class .= str_repeat($indentation, 3).'INSERT INTO `\'.self::_getTableName().\'` (';
+            $class .= str_repeat($indentation, 3).'INSERT INTO `\'.static::_getTableName().\'` (';
             foreach ($fields as $field => $fieldType)
             {
                 $class .= '`'.$field.'`';
@@ -221,7 +221,7 @@ class Oxygen_ModelsGenerator
 
             // Load function
             $class .= str_repeat($indentation, 1).'public function load($id = 0)'."\n".$indentation."{\n";
-            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter();'."\n\n";
+            $class .= str_repeat($indentation, 2).'$db = static::_getDbAdapter();'."\n\n";
             $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
             $class .= str_repeat($indentation, 3).'SELECT ';
             foreach ($fields as $field => $fieldType)
@@ -231,7 +231,7 @@ class Oxygen_ModelsGenerator
                     $class .= ", ";
             }
             $class .= "\n";
-            $class .= str_repeat($indentation, 3).'FROM `\'.self::_getTableName().\'`'."\n";
+            $class .= str_repeat($indentation, 3).'FROM `\'.static::_getTableName().\'`'."\n";
             $class .= str_repeat($indentation, 3).'WHERE id = :id'."\n";
             $class .= str_repeat($indentation, 2).'\');'."\n\n";
 
@@ -251,9 +251,9 @@ class Oxygen_ModelsGenerator
 
             // Delete function
             $class .= str_repeat($indentation, 1)."public function delete(\$id = 0)\n".$indentation."{\n";
-            $class .= str_repeat($indentation, 2).'$db = self::_getDbAdapter();'."\n\n";
+            $class .= str_repeat($indentation, 2).'$db = static::_getDbAdapter();'."\n\n";
             $class .= str_repeat($indentation, 2).'$res = $db->prepare(\''."\n";
-            $class .= str_repeat($indentation, 3).'DELETE FROM `\'.self::_getTableName().\'`'."\n";
+            $class .= str_repeat($indentation, 3).'DELETE FROM `\'.static::_getTableName().\'`'."\n";
             $class .= str_repeat($indentation, 3).'WHERE id = :id'."\n";
             $class .= str_repeat($indentation, 2).'\');'."\n\n";
 
@@ -277,8 +277,8 @@ __INDENTATION__ * */
 __INDENTATION__public static function find($criterion = array(), $returnObjects = false)
 __INDENTATION__{
 __INDENTATION____INDENTATION__return Oxygen_Db::find(
-__INDENTATION____INDENTATION____INDENTATION__self::_getDbAdapter(),
-__INDENTATION____INDENTATION____INDENTATION__self::_getTableName(),
+__INDENTATION____INDENTATION____INDENTATION__static::_getDbAdapter(),
+__INDENTATION____INDENTATION____INDENTATION__static::_getTableName(),
 __INDENTATION____INDENTATION____INDENTATION__'__CLASSNAME__',
 __INDENTATION____INDENTATION____INDENTATION__$criterion,
 __INDENTATION____INDENTATION____INDENTATION__$returnObjects
