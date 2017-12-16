@@ -13,7 +13,7 @@ class Config
 
     // Options list, here is default config
     protected $_options = [
-        'pluginsClass' => 'Plugin',
+        'plugins' => 'Plugin',
         'router' => [
             'default' => [
                 'controller' => 'index',

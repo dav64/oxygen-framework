@@ -100,7 +100,7 @@ Class Project
             $project = Project::getInstance();
 
             $config = Config::getInstance();
-            $pluginClasses = $config->getOption('pluginsClass');
+            $pluginClasses = $config->getOption('plugins');
 
             if (is_string($pluginClasses))
                 $pluginClasses = [$pluginClasses];
